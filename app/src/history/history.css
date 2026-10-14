@@ -1,0 +1,17 @@
+/* History tab: the project's saved versions with inline diffs. */
+.history-tab { flex: 1 1 0; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.history-head { display: flex; align-items: baseline; gap: 10px; }
+.history-head h2 { margin: 0; font: 700 16px/1.2 var(--ui); letter-spacing: -0.01em; }
+.history-head .muted { font-size: 12.5px; }
+.history-empty { padding: 16px; margin: 0; }
+.version-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.version-item { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.version-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.version-source { flex: none; margin: 0; padding: 2px 8px; font-size: 11.5px; }
+.version-source.manual { background: var(--raised); color: var(--text-dim); }
+.version-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.version-time { flex: none; font: 11.5px/1 var(--mono); color: var(--text-faint); }
+.version-actions { display: flex; gap: 6px; }
+.version-actions .btn { height: 26px; padding: 0 8px; }
+.version-diff { display: flex; flex-direction: column; gap: 6px; }
+.version-diff .muted { font-size: 12.5px; }

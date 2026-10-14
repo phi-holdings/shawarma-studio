@@ -1,0 +1,14 @@
+/* Notices over the song panel: bottom-centre, above the status bar */
+.toast-area { position: fixed; right: 0; bottom: 58px; width: var(--work-w); z-index: 9; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; max-width: min(560px, 100%); padding: 9px 8px 9px 14px; border-radius: 10px;
+  background: var(--raised); border: 1px solid var(--line); color: var(--text); font-size: 13px; line-height: 1.45; box-shadow: 0 12px 32px color-mix(in srgb, var(--shadow) 55%, transparent);
+  animation: toast-in 160ms ease-out; }
+.toast.toast-error { border-color: color-mix(in srgb, var(--err) 50%, transparent); }
+.toast.toast-error .toast-msg { color: var(--text); }
+.toast-msg { flex: 1; min-width: 0; overflow-wrap: anywhere; padding-top: 1px; }
+.toast-link { flex: none; padding: 1px 4px; border: 0; background: none; color: var(--accent); font: 600 12.5px var(--ui); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.toast-close { flex: none; width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--text-dim); font-size: 15px; line-height: 1; cursor: pointer; }
+.toast-close:hover { background: var(--hover); color: var(--text); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+@media (max-width: 900px) { .toast-area { width: 100%; } }

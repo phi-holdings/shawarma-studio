@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- The 1200x630 social image (app/public/og.png), in the public site's look: off-white paper, black ink,
+     Geist, the Hairline-style mark. Rendered by scripts/brand-assets.mjs, which replaces the font and icon
+     placeholders with data URLs. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  @font-face { font-family: 'Geist'; src: url(__GEIST__) format('woff2'); font-weight: 100 900; }
+  @font-face { font-family: 'Geist Mono'; src: url(__GEIST_MONO__) format('woff2'); font-weight: 100 900; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #fafaf9; color: #161616;
+    font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  .frame { display: grid; grid-template-columns: 1fr 470px; gap: 56px; height: 100%; padding: 56px 64px; }
+  .pitch { display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 30px; letter-spacing: -0.03em; }
+  .brand img { width: 44px; height: 44px; }
+  h1 { margin: auto 0 0; font-size: 76px; line-height: 1.02; font-weight: 400; letter-spacing: -0.045em; text-wrap: balance; }
+  p { margin: 26px 0 0; font-size: 25px; line-height: 1.4; color: #6b6b69; max-width: 26ch; }
+  .free { margin-top: 30px; align-self: flex-start; display: inline-flex; align-items: center; height: 52px; padding: 0 26px;
+    border-radius: 999px; background: #000; color: #fff; font-weight: 500; font-size: 21px; }
+  .panel { border-radius: 32px; background: #f2f2f0; display: grid; place-items: center; }
+  .panel img { width: 360px; height: 360px; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <section class="pitch">
+      <div class="brand"><img src="__ICON__" alt="" />Shawarma</div>
+      <h1>Write songs in code. Change them by asking.</h1>
+      <p>A live-coding music editor with an assistant that edits the code for you.</p>
+      <span class="free">Free to start</span>
+    </section>
+    <div class="panel"><img src="__ICON__" alt="" /></div>
+  </div>
+</body>
+</html>

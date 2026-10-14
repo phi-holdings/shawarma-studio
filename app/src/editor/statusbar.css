@@ -1,0 +1,62 @@
+/* Code tab status bar: [run selection] [sections · visuals · tempo] [keys] notice [checks · meter].
+   A size container, so the tools fold into "⋯" by the panel's width, not the window's. */
+.status { container-type: inline-size; container-name: status; position: relative; z-index: 5; gap: 6px; }
+.status-group { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+.status-tools { padding-left: 6px; margin-left: 2px; border-left: 1px solid var(--line); }
+.status-health { gap: 8px; }
+.status .notice { margin-left: 4px; }
+.status-count { margin-left: 2px; font: 11px/1 var(--mono); color: var(--text-faint); }
+.tempo-readout { font: 12px/1 var(--mono); }
+.status-more { display: none; }
+.status-more > summary { width: 30px; padding: 0; justify-content: center; font-size: 15px; }
+
+/* menus open upwards from the bar */
+.status-pop > summary { list-style: none; }
+.status-pop[open] > summary { background: var(--raised); color: var(--text); }
+.status .status-pop > .popover-panel { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; width: 300px; max-height: min(60vh, 460px); overflow: auto; padding: 6px; gap: 4px; }
+.status .status-more > .popover-panel { width: 320px; padding: 8px; }
+.status-more h4 { margin: 6px 6px 0; font: 600 12px var(--ui); color: var(--text-dim); }
+.status-more h4:first-child { margin-top: 2px; }
+
+.status-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.status-item { display: flex; align-items: center; gap: 2px; }
+.status-item-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text); font: 13px var(--ui); text-align: left; cursor: pointer; width: 100%; }
+.status-item-main:hover:not(:disabled), .status-item-play:hover { background: var(--hover); }
+.status-item-main:disabled { color: var(--text-faint); cursor: default; }
+.status-item-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-item-meta { flex: none; font: 11.5px var(--mono); color: var(--text-faint); }
+.status-item-play { flex: none; width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: var(--live); font-size: 11px; cursor: pointer; }
+.status-tick { flex: none; width: 14px; color: var(--accent); font-weight: 700; }
+.status-check[aria-pressed='true'] .status-item-label { color: var(--accent); }
+.status-note { padding: 6px 8px 4px; font-size: 12px; line-height: 1.5; }
+.status-note code { font: 11.5px var(--mono); color: var(--accent); }
+.status-note kbd { font-size: 10.5px; }
+
+.tempo-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px 2px; }
+.tempo-row .btn { font-size: 17px; }
+.tempo-value { font: 13px var(--ui); color: var(--text-dim); text-align: center; }
+.tempo-value strong { font: 600 20px/1 var(--mono); color: var(--text); }
+
+@container status (max-width: 900px) {
+  .status .keys { display: none; }
+}
+@container status (max-width: 600px) {
+  .status-tools { display: none; }
+  .status-more { display: block; }
+}
+@container status (max-width: 760px) {
+  .status .meter-db { display: none; }
+  .status .meter-bar { width: 40px; }
+}
+@container status (max-width: 380px) {
+  .status .meter { display: none; }
+}
+
+/* sounds under the code: a toggle in the status bar */
+.split-toggle { gap: 6px; }
+.split-toggle[aria-pressed='true'] { color: var(--accent); background: var(--raised); }
+@container status (max-width: 760px) {
+  .split-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .split-toggle { width: 30px; padding: 0; justify-content: center; }
+}

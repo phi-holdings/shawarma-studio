@@ -1,0 +1,81 @@
+import react from '@vitejs/plugin-react';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig, type Plugin } from 'vite';
+import { inlineModuleImports, runtimeOriginGate } from './src/dev/runtimeCors';
+import { PUBLIC_ROUTES } from './src/seo/routes';
+
+const sharedSrc = `/@fs${path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../shared/src')}/`;
+const serverPort = Number(process.env.SHAWARMA_SERVER_PORT ?? 8787);
+
+/** Gate + inline-import rewrite for the opaque-origin song runtime; see src/dev/runtimeCors.ts. */
+function runtimeFrame(): Plugin {
+  const gate = runtimeOriginGate({ sharedSrcPrefix: sharedSrc });
+  return {
+    name: 'shawarma-runtime-frame',
+    configureServer: (server) => { server.middlewares.use(gate); },
+    configurePreviewServer: (server) => { server.middlewares.use(gate); },
+    transformIndexHtml: {
+      order: 'post',
+      handler: (html, ctx) => (ctx.filename.endsWith('runtime.html') ? inlineModuleImports(html) : html),
+    },
+  };
+}
+
+/**
+ * `SHAWARMA_PREVIEW_SITE=1 vite preview` serves the prerendered public pages at their real paths
+ * (/, /privacy, ...) the way the server does for signed-out visitors; used for Lighthouse runs.
+ */
+function previewPublicSite(): Plugin {
+  const files = new Map(PUBLIC_ROUTES.map((r) => [r.path, `/${r.file}`]));
+  return {
+    name: 'shawarma-preview-public-site',
+    configurePreviewServer: (server) => {
+      if (process.env.SHAWARMA_PREVIEW_SITE !== '1') return;
+      server.middlewares.use((req, _res, next) => {
+        const [pathname, query] = (req.url ?? '/').split('?');
+        const file = files.get(pathname);
+        if (file) req.url = query === undefined ? file : `${file}?${query}`;
+        next();
+      });
+    },
+  };
+}
+
+/**
+ * After a client build, prerender the public pages and write robots.txt + sitemap.xml into the same
+ * outDir (scripts/prerender.mjs, a separate process so it gets its own Vite SSR loader). PUBLIC_URL sets
+ * every absolute URL in them.
+ */
+function prerenderPublicSite(): Plugin {
+  let outDir = '';
+  return {
+    name: 'shawarma-prerender-public-site',
+    apply: 'build',
+    configResolved: (config) => { outDir = config.build.ssr ? '' : path.resolve(config.root, config.build.outDir); },
+    closeBundle: {
+      sequential: true,
+      handler() {
+        if (!outDir) return;
+        const script = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'scripts/prerender.mjs');
+        execFileSync(process.execPath, [script, '--outDir', outDir], { stdio: 'inherit' });
+      },
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [react(), runtimeFrame(), previewPublicSite(), prerenderPublicSite()],
+  server: { port: 5173, host: '127.0.0.1', proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
+  preview: { proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
+  // scan both pages up front so the runtime's deps don't trigger a mid-session re-optimise + reload
+  optimizeDeps: { entries: ['index.html', 'runtime.html'] },
+  build: {
+    // site: the prerendered public pages' template (no app bundle); scripts/prerender.mjs fills it in
+    rollupOptions: { input: { main: 'index.html', runtime: 'runtime.html', site: 'site/index.html' } },
+    // no <link rel=modulepreload> injected for dynamic imports: in the runtime those preloads go out
+    // without a Referer and the null-origin gate refuses them (the imports themselves load fine)
+    modulePreload: { resolveDependencies: (_file, deps, ctx) => (ctx.hostType === 'js' ? [] : deps) },
+  },
+});

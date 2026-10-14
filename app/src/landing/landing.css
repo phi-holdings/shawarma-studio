@@ -1,0 +1,133 @@
+/* The public pages (home, privacy, terms, source). Quiet on purpose: off-white paper, black ink, one
+   promise, one panel. They keep their own light palette whatever the app's theme is.
+   The page scrolls inside .landing because the app fixes html/body/#root to the viewport. */
+.landing {
+  --ld-paper: #fafaf9;
+  --ld-panel: #f2f2f0;
+  --ld-ink: #161616;
+  --ld-dim: #6b6b69;
+  --ld-faint: #9a9a97;
+  --ld-hair: #e4e4e1;
+  --ld-black: #000000;
+  --ld-err: #b42318;
+  --ld-wide: 1200px;
+  height: 100%; overflow-y: auto; background: var(--ld-paper); color: var(--ld-ink);
+  font: 16px/1.55 var(--ui); color-scheme: light; -webkit-font-smoothing: antialiased;
+}
+.landing a { color: inherit; }
+.landing p { margin: 0; }
+.landing :focus-visible { outline: 2px solid var(--ld-ink); outline-offset: 3px; }
+
+/* pills: the only button shape */
+.ld-pill { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 38px; padding: 0 18px;
+  border-radius: 999px; background: var(--ld-black); color: #fff !important; text-decoration: none; font: 500 14.5px/1 var(--ui); white-space: nowrap; }
+.ld-pill:hover { background: #2a2a2a; }
+.ld-pill-line { background: #fff; color: var(--ld-ink) !important; box-shadow: inset 0 0 0 1px var(--ld-hair); }
+.ld-pill-line:hover { background: #fff; box-shadow: inset 0 0 0 1px #cfcfcb; }
+.ld-pill-big { height: 46px; padding: 0 22px; font-size: 16px; }
+.ld-pill svg { background: #fff; border-radius: 50%; padding: 2px; box-sizing: content-box; }
+
+/* nav */
+.ld-nav { display: flex; align-items: center; justify-content: space-between; max-width: var(--ld-wide); height: 76px; margin: 0 auto; padding: 0 32px; }
+.ld-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 600 19px/1 var(--ui); letter-spacing: -0.03em; }
+.landing .wordmark, .ld-brand { --mark-fill: var(--ld-paper); }
+.landing .wordmark { display: inline-flex; align-items: center; gap: 8px; }
+.ld-nav nav { display: flex; gap: 8px; }
+
+/* hero: the promise on the left, what it is on the right (no third thing) */
+.ld-main { max-width: var(--ld-wide); margin: 0 auto; padding: 0 32px; }
+.ld-hero { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px 64px; align-items: start; padding: clamp(64px, 12vh, 120px) 0 56px; }
+.ld-hero h1 { margin: 0; max-width: 11em; font: 400 clamp(44px, 6vw, 76px)/1.02 var(--ui); letter-spacing: -0.045em; text-wrap: balance; }
+.ld-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+.ld-hero-side { max-width: 34em; padding-top: 14px; color: var(--ld-dim); font-size: 17px; line-height: 1.55; text-wrap: pretty; }
+.ld-hero-side a { text-decoration: underline; text-decoration-color: #cfcfcb; text-underline-offset: 3px; }
+.ld-hero-side a:hover { text-decoration-color: currentColor; }
+.ld-error { max-width: 34em; margin-top: 24px !important; padding: 10px 14px; border-radius: 12px; background: #fdf0ee; color: var(--ld-err); font-size: 14.5px; }
+
+/* the showcase: one rounded panel, a tab per part of a song, one big figure at a time */
+/* every tab's content sits in the same cell, so the panel is always as tall as the tallest one: switching never moves it */
+.ld-show { display: grid; grid-template-columns: minmax(0, 1fr); border-radius: 28px; background: var(--ld-panel); padding: 8px; }
+.ld-show > .ld-panel { grid-area: 2 / 1; }
+.ld-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.ld-tabs button { height: 44px; border: 0; border-radius: 20px; background: transparent; color: var(--ld-dim); font: 500 15px/1 var(--ui); cursor: pointer; }
+.ld-tabs button:hover { color: var(--ld-ink); }
+.ld-tabs button[aria-selected='true'] { background: #fff; color: var(--ld-ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+.ld-panel { position: relative; margin-top: 8px; border-radius: 22px; background: var(--ld-panel); }
+.ld-panel[hidden] { display: block; visibility: hidden; }
+.ld-stage {
+  /* Hairline's palette, on the panel: plates are the panel, the bright stroke is the ink */
+  --hairline-plate: var(--ld-panel);
+  --hairline-hi: var(--ld-ink);
+  --hairline-edge: #9d9d99;
+  --hairline-mid: #c4c4c0;
+  --hairline-lo: #dcdcd8;
+  --hairline-stroke: 1;
+  display: block; position: relative; width: min(100%, 620px); aspect-ratio: 5 / 4; margin: 0 auto;
+}
+.ld-panel-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 8px 28px 28px; }
+.ld-ask { display: inline-flex; align-items: center; gap: 12px; justify-self: start; max-width: 100%; padding: 8px 18px 8px 8px; border-radius: 22px; background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); font-size: 15.5px; }
+.ld-you { display: inline-grid; place-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--ld-black); color: #fff; font: 500 12.5px/1 var(--ui); }
+.ld-panel-text { color: var(--ld-dim); font-size: 15px; }
+/* the read-out sits in the panel's corner, out of the flow, so changing words never moves the layout */
+.ld-read { position: absolute; top: 16px; right: 22px; color: var(--ld-faint); font: 13px/1 var(--mono); font-variant-numeric: tabular-nums; pointer-events: none; }
+
+/* footer, shared with the doc pages */
+.ld-foot { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; max-width: var(--ld-wide); margin: 96px auto 0; padding: 28px 32px 40px; color: var(--ld-dim); font-size: 14px; }
+.ld-foot .wordmark { color: var(--ld-ink); font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+.ld-foot nav { display: flex; gap: 20px; }
+.ld-foot nav a { text-decoration: none; }
+.ld-foot nav a:hover { color: var(--ld-ink); }
+.ld-license { margin-left: auto; color: var(--ld-faint); }
+
+/* privacy, terms, source */
+.ld-doc { max-width: 680px; margin: 0 auto; padding: 0 32px; }
+.ld-doc-head { display: flex; align-items: center; justify-content: space-between; height: 76px; margin-bottom: 56px; }
+.ld-doc-head .wordmark { gap: 10px; font: 600 19px/1 var(--ui); letter-spacing: -0.03em; text-decoration: none; }
+.ld-doc-head a:not(.wordmark) { color: var(--ld-dim); font-size: 14.5px; text-decoration: none; }
+.ld-doc-head a:not(.wordmark):hover { color: var(--ld-ink); }
+.ld-doc h1 { margin: 0 0 8px; font: 400 clamp(36px, 5vw, 48px)/1.05 var(--ui); letter-spacing: -0.04em; }
+.ld-doc .ld-updated { margin-bottom: 40px; color: var(--ld-faint); font-size: 14px; }
+.ld-doc h2 { margin: 40px 0 8px; font: 500 19px/1.3 var(--ui); letter-spacing: -0.015em; }
+.ld-doc p, .ld-doc li { color: var(--ld-dim); font-size: 16px; line-height: 1.65; }
+.ld-doc p + p { margin-top: 12px; }
+.ld-doc ul { margin: 8px 0 0; padding-left: 20px; }
+.ld-doc li + li { margin-top: 6px; }
+.ld-doc ul + p { margin-top: 14px; }
+.ld-doc strong { color: var(--ld-ink); font-weight: 600; }
+.ld-doc a { color: var(--ld-ink); text-underline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .ld-nav, .ld-main, .ld-foot, .ld-doc { padding-left: 20px; padding-right: 20px; }
+  .ld-hero { grid-template-columns: minmax(0, 1fr); padding: 48px 0 36px; gap: 20px; }
+  .ld-hero-side { grid-row: 2; padding-top: 0; }
+  .ld-show { border-radius: 22px; padding: 6px; }
+  .ld-panel { border-radius: 18px; }
+  .ld-panel-foot { padding: 4px 16px 20px; }
+  .ld-read { top: 12px; right: 16px; }
+  .ld-license { margin-left: 0; flex-basis: 100%; }
+}
+@media (max-width: 420px) {
+  .ld-nav .ld-pill-line { display: none; }
+  .ld-cta .ld-pill { width: 100%; }
+  .ld-ask { font-size: 14.5px; }
+}
+
+/* ---- the home: one screen, no scrolling (when the window is big enough to hold it) ---- */
+.ld-home { display: flex; flex-direction: column; }
+.ld-home > .ld-nav, .ld-home > .ld-foot, .ld-home > .ld-main { width: 100%; box-sizing: border-box; }
+.ld-home .ld-hero { display: block; padding: 40px 0 32px; }
+.ld-home .ld-hero h1 { font-size: clamp(40px, 4.6vw, 66px); max-width: 9.5em; }
+.ld-home .ld-hero-side { margin-top: 22px !important; padding-top: 0; max-width: 30em; }
+.ld-home .ld-cta { align-items: center; gap: 16px; margin-top: 32px; }
+.ld-free { color: var(--ld-dim); font-size: 15px; }
+.ld-home .ld-foot { margin-top: 32px; }
+@media (min-width: 960px) and (min-height: 620px) {
+  .ld-home { overflow: hidden; }
+  .ld-home .ld-main { flex: 1; min-height: 0; width: 100%; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+  .ld-home .ld-hero { padding: 0 0 24px; }
+  /* the figure takes what height is left: the window minus nav, tabs, request line and footer */
+  .ld-home .ld-stage { width: auto; height: clamp(200px, calc(100vh - 340px), 460px); height: clamp(200px, calc(100svh - 340px), 460px); }
+  .ld-home .ld-panel-foot { padding: 4px 24px 22px; }
+  .ld-home .ld-foot { margin-top: 0; padding-top: 16px; padding-bottom: 20px; }
+}

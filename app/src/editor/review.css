@@ -1,0 +1,29 @@
+/* Reviewing Claude's change in the editor (review.ts): the bar on top and the merge view's colours. */
+.cm-panels-top { border-bottom: 1px solid var(--line); background: var(--panel); }
+.cm-review-panel { display: flex; align-items: center; gap: 4px; padding: 6px 8px 6px 12px; font: 13px/1.2 var(--ui); color: var(--text); }
+.cm-review-panel .btn { height: 26px; padding: 0 10px; font-size: 12.5px; }
+.cm-review-panel .btn-icon { width: 26px; padding: 0; }
+.cm-review-title { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.cm-review-count { flex: 1 0 auto; color: var(--text-dim); font-size: 12px; padding: 0 8px; }
+
+/* inserted (proposed) and deleted (original) text */
+.cm-merge-b .cm-changedLine, .cm-merge-b .cm-insertedLine { background: color-mix(in srgb, var(--ok) 9%, transparent) !important; }
+.cm-merge-b .cm-changedText { background: color-mix(in srgb, var(--ok) 28%, transparent) !important; border-radius: 2px; text-decoration: none !important; }
+.cm-merge-b .cm-deletedChunk { background: color-mix(in srgb, var(--err) 9%, transparent) !important; padding: 2px 0 2px 6px; position: relative; }
+.cm-merge-b .cm-deletedChunk .cm-deletedText,
+.cm-merge-b .cm-deletedChunk del { color: var(--del-text); text-decoration: none; }
+.cm-merge-b .cm-deletedChunk .cm-deletedText { background: color-mix(in srgb, var(--err) 26%, transparent); border-radius: 2px; }
+/* words deleted inside a line (inline diff) read as struck out next to the new ones */
+.cm-merge-b .cm-line .cm-deletedText, .cm-merge-b .cm-line del { color: var(--del-text); background: color-mix(in srgb, var(--err) 20%, transparent); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--err) 70%, transparent); }
+.cm-merge-b .cm-changeGutter { width: 3px; padding: 0; }
+.cm-merge-b .cm-changedLineGutter { background: var(--ok); }
+.cm-merge-b .cm-deletedLineGutter { background: var(--err); }
+
+/* Accept / Reject on each change */
+.cm-merge-b .cm-chunkButtons { position: absolute; right: 8px; top: 2px; display: flex; gap: 4px; z-index: 2; }
+.cm-review-chunk-btn { height: 22px; padding: 0 8px; border: 0; border-radius: 6px; font: 600 11.5px/1 var(--ui); cursor: pointer; }
+.cm-review-chunk-btn.accept { background: var(--accent); color: var(--accent-ink); }
+.cm-review-chunk-btn.accept:hover { background: var(--accent-hover); }
+.cm-review-chunk-btn.reject { background: var(--raised); color: var(--text); }
+.cm-review-chunk-btn.reject:hover { background: var(--hover); }
+.cm-review-chunk-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
