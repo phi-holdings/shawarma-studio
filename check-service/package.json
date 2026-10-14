@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch --import ./src/register.mjs src/server.ts",
     "start": "tsx --import ./src/register.mjs src/server.ts",
+    "build-reference": "tsx src/reference/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc -p ."
   },

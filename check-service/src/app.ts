@@ -3,6 +3,8 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { inspect, queryEvents } from './inspect';
 import { SandboxMemoryError, SandboxTimeoutError, sandboxPrecheck } from './sandbox';
+import { shippedReference } from './reference/search';
+import type { ReferenceKind } from './reference/types';
 import { knownSounds } from './sounds';
 
 // The check service: the only process that loads Strudel. The platform server calls it over loopback HTTP
@@ -11,6 +13,7 @@ import { knownSounds } from './sounds';
 //   POST /events    {code, fromCycle, toCycle, sound?}        -> EventQuery
 //   POST /precheck  {code}                                    -> {ok, ...} | {ok:false, hang:true, error}
 //   GET  /sounds                                              -> {sounds: string[] | null}
+//   GET  /reference?q=&limit=5&kinds=function,doc            -> {results: [{kind,title,source,content,why,ref}]}
 //   GET  /health                                              -> {ok: true}
 // With CHECK_KEY set, every route but /health needs the same value in the x-check-key header.
 
@@ -70,6 +73,17 @@ export function createCheckApp(opts: { key?: string } = {}) {
   app.get('/sounds', async (c) => {
     const s = await knownSounds();
     return c.json({ sounds: s ? [...s] : null });
+  });
+
+  app.get('/reference', (c) => {
+    const q = c.req.query('q')?.trim();
+    if (!q) throw new BadRequest('q must be a non-empty string');
+    const limit = c.req.query('limit') === undefined ? 5 : Number(c.req.query('limit'));
+    if (!Number.isFinite(limit) || limit < 1) throw new BadRequest('limit must be a number from 1 to 10');
+    const kinds = c.req.query('kinds')?.split(',').map((k) => k.trim()).filter(Boolean) ?? [];
+    if (kinds.some((k) => k !== 'function' && k !== 'doc')) throw new BadRequest('kinds must be function and/or doc');
+    const results = shippedReference().search(q.slice(0, 500), { limit, kinds: kinds as ReferenceKind[] });
+    return c.json({ results: results.map(({ kind, title, source, content, why, ref }) => ({ kind, title, source, content, why, ref })) });
   });
 
   app.onError((e, c) => {
