@@ -52,7 +52,16 @@ export type ChatEvent =
   | ({ type: 'proposal' } & Proposal)
   | { type: 'analysis_request'; requestId: string; fromSec: number; toSec: number; code: string }
   | { type: 'done'; costUsd: number; spentTodayUsd: number; stopped?: boolean }
-  | { type: 'error'; message: string; /** the API key was refused */ code?: 'auth' }
+  | {
+    type: 'error'; message: string;
+    /**
+     * `auth`: the API key was refused (local mode). Hosted mode, when a limit stopped the turn:
+     * `pro_required`, `allowance`, `global_cap` or `trial_cap` (the same codes as the refusals before a turn).
+     */
+    code?: 'auth' | 'pro_required' | 'allowance' | 'global_cap' | 'trial_cap';
+    /** Hosted: offer "Start 7-day free trial" next to the message. */
+    canUpgrade?: boolean;
+  }
   /** The edits so far, sent after each edit while the turn is still running (superseded by 'proposal'). */
   | { type: 'proposal_partial'; id: string; baseCode: string; code: string; summary: string[]; selection?: Range | null };
 
