@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import { inlineModuleImports, runtimeOriginGate } from './src/dev/runtimeCors';
 import { PUBLIC_ROUTES } from './src/seo/routes';
-import { umamiTag, withAnalytics } from './src/seo/analytics';
+import { reportOriginTag, umamiTag, withAnalytics } from './src/seo/analytics';
 
 const sharedSrc = `/@fs${path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../shared/src')}/`;
 const serverPort = Number(process.env.SHAWARMA_SERVER_PORT ?? 8787);
@@ -72,16 +72,39 @@ function prerenderPublicSite(): Plugin {
   };
 }
 
-/** Umami's script in the app shell and the public pages when VITE_UMAMI_WEBSITE_ID and VITE_UMAMI_SRC are set (src/seo/analytics.ts). */
+/**
+ * Umami's script in the app shell and the public pages when VITE_UMAMI_WEBSITE_ID and VITE_UMAMI_SRC are
+ * set, and the error tracker's origin when VITE_SENTRY_DSN is (src/seo/analytics.ts); the server's CSP
+ * reads both from the page.
+ */
 function analytics(): Plugin {
   let tag = '';
   return {
     name: 'shawarma-analytics',
     // config.env has the VITE_ settings from the environment and .env files
-    configResolved: (config) => { tag = umamiTag(config.env.VITE_UMAMI_WEBSITE_ID, config.env.VITE_UMAMI_SRC); },
+    configResolved: (config) => {
+      tag = [reportOriginTag(config.env.VITE_SENTRY_DSN), umamiTag(config.env.VITE_UMAMI_WEBSITE_ID, config.env.VITE_UMAMI_SRC)].filter(Boolean).join('\n    ');
+    },
     transformIndexHtml: { order: 'post', handler: (html, ctx) => withAnalytics(html, ctx.filename, tag) },
   };
 }
+
+/**
+ * The studio commit this build comes from (VITE_STUDIO_COMMIT, else `git rev-parse HEAD` in studio/), and
+ * whether the tree had uncommitted changes: the /source page links that exact commit, and Help & feedback
+ * sends it along. Empty outside git.
+ */
+function studioCommit(): void {
+  const studioDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const git = (...args: string[]) => execFileSync('git', ['-C', studioDir, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  if (process.env.VITE_STUDIO_COMMIT === undefined) {
+    try {
+      process.env.VITE_STUDIO_COMMIT = git('rev-parse', 'HEAD');
+      process.env.VITE_STUDIO_DIRTY = git('status', '--porcelain', '--untracked-files=no') ? '1' : '';
+    } catch { process.env.VITE_STUDIO_COMMIT = ''; }
+  }
+}
+studioCommit();
 
 export default defineConfig({
   plugins: [react(), runtimeFrame(), previewPublicSite(), prerenderPublicSite(), analytics()],

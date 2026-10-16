@@ -1,10 +1,14 @@
 // The account at the bottom of the sidebar (hosted mode): who is signed in and their plan; opens a panel
-// with this month's allowance, the free trial (Free), Manage billing and Sign out, and links to the source
+// with this month's allowance, the subscription's next step, the free trial (Free), Manage billing, the
+// Account page, Sign out and Help & feedback, and links to the source
 // code (AGPL: everyone using the service must be offered it), privacy and terms.
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../api';
+import { BUILD } from '../build';
+import { CONTACT_EMAIL } from '../landing/contact';
 import { AllowanceMeter } from './AllowanceMeter';
 import { trialAction, type BillingStatus } from './billingApi';
+import { billingLine } from './billingCopy';
 import './account.css';
 
 type HostedMe = Extract<Me, { mode: 'hosted' }>;
@@ -19,12 +23,20 @@ export function Avatar(props: { user: HostedMe['user']; size?: number }) {
     : <span className="avatar avatar-initial" aria-hidden="true">{initial(label)}</span>;
 }
 
+/** mailto: for Help & feedback, with the build and the browser filled in. */
+export function helpMailto(): string {
+  const body = `\n\n---\nShawarma ${BUILD.id}\n${typeof navigator === 'undefined' ? '' : navigator.userAgent}`;
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Shawarma: help and feedback')}&body=${encodeURIComponent(body)}`;
+}
+
 export function AccountMenu(props: {
   me: HostedMe;
   billing: BillingStatus | null;
   onUpgrade(): void;
   onManageBilling(): Promise<void>;
   onSignOut(): Promise<void>;
+  /** Opens the Account page (export, sign out everywhere, delete). */
+  onAccount(): void;
   /** Called when the panel opens (refresh the allowance). */
   onOpen?(): void;
 }) {
@@ -58,6 +70,7 @@ export function AccountMenu(props: {
             {props.me.user.name && <span>{props.me.user.email}</span>}
           </div>
           {props.billing && <AllowanceMeter status={props.billing} />}
+          {props.billing && (() => { const l = billingLine(props.billing); return l && <p className={`account-billing-line${l.tone === 'alert' ? ' alert' : ''}`}>{l.text}</p>; })()}
           {error && <div role="alert" className="err-text">{error}</div>}
           <div className="account-actions">
             {plan === 'free' && <button type="button" className="btn btn-primary" onClick={() => { setOpen(false); props.onUpgrade(); }}>{trialAction(props.billing?.trialDays ?? props.me.billing.trialDays)}</button>}
@@ -66,13 +79,16 @@ export function AccountMenu(props: {
                 {busy === 'billing' ? 'Opening billing…' : 'Manage billing'}
               </button>
             )}
+            <button type="button" className="btn btn-ghost" onClick={() => { setOpen(false); props.onAccount(); }}>Account…</button>
             <button type="button" className="btn btn-ghost" disabled={busy !== null} onClick={() => void run('signout', props.onSignOut)}>
               {busy === 'signout' ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
+          <a className="account-help" href={helpMailto()}>Help &amp; feedback</a>
           <nav className="account-links" aria-label="About Shawarma">
             {props.me.admin && <a href="/admin">Admin</a>}
             <a href="/source" target="_blank" rel="noopener">Source code</a>
+            <a href="/pricing" target="_blank" rel="noopener">Pricing</a>
             <a href="/privacy" target="_blank" rel="noopener">Privacy</a>
             <a href="/terms" target="_blank" rel="noopener">Terms</a>
           </nav>

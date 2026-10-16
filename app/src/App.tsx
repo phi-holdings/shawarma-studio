@@ -32,6 +32,11 @@ import { AccountMenu } from './account/AccountMenu';
 import { AllowanceMeter } from './account/AllowanceMeter';
 import { UpgradeDialog } from './account/UpgradeDialog';
 import { getBillingStatus, openPortal, trialAction, type BillingStatus } from './account/billingApi';
+import { AccountDialog } from './account/AccountDialog';
+import { BillingBanner, LegalBanner } from './account/Banners';
+import { billingLine } from './account/billingCopy';
+import { TrashDialog } from './projects/TrashDialog';
+import { TRASH_NOTE } from './projects/trashCopy';
 
 const SCRATCH = 's("bd sd")\n';
 
@@ -41,6 +46,10 @@ export function App(props: { me?: Me | null } = {}) {
   const [billing, setBilling] = useState<BillingStatus | null>(hostedMe?.billing ?? null);
   const refreshBilling = useCallback(() => { if (hostedMe) getBillingStatus().then(setBilling).catch(() => {}); }, [hostedMe]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [trashOpen, setTrashOpen] = useState(false);
+  // phones: a note instead of the editor, unless the person asks for it anyway (this tab only)
+  const [narrowOk, setNarrowOk] = useState(() => sessionStorage.getItem('shawarma.narrowOk') === '1');
   const plan = billing?.plan ?? hostedMe?.plan ?? 'free';
   const trialDays = billing?.trialDays ?? hostedMe?.billing.trialDays ?? 7;
   const manageBilling = async () => { const { url } = await openPortal(); window.location.assign(url); };
@@ -363,14 +372,18 @@ export function App(props: { me?: Me | null } = {}) {
     </>
   );
   return (
-    <div className={`app${sidebarOpen ? '' : ' no-sidebar'}`} style={{ ['--work-w' as string]: `${workWidth}px` }}>
+    <>
+    <div className={`app${sidebarOpen ? '' : ' no-sidebar'}${narrowOk ? ' narrow-ok' : ''}`} style={{ ['--work-w' as string]: `${workWidth}px` }}>
       {sidebarOpen
         ? <Sidebar projects={projects} projectId={projectId} disabled={offline} onOpen={switchProject} onNew={() => newProject()} onRename={renameProjectById}
             onDuplicate={duplicate} onDelete={(id) => setDialog({ kind: 'delete', id })} onShare={share} onReveal={hostedMe ? undefined : reveal} onImport={() => newProject('import')}
             onSettings={() => setSettingsOpen(true)} onCollapse={() => setSidebar(false)}
-            account={hostedMe && <AccountMenu me={hostedMe} billing={billing} onUpgrade={() => setUpgradeOpen(true)} onManageBilling={manageBilling} onSignOut={doSignOut} onOpen={refreshBilling} />} />
+            onTrash={() => setTrashOpen(true)}
+            account={hostedMe && <AccountMenu me={hostedMe} billing={billing} onUpgrade={() => setUpgradeOpen(true)} onManageBilling={manageBilling} onSignOut={doSignOut} onAccount={() => setAccountOpen(true)} onOpen={refreshBilling} />} />
         : <button className="btn btn-ghost btn-icon sidebar-show" aria-label="Show sidebar" title="Show sidebar" onClick={() => setSidebar(true)}>⟩</button>}
       <main className="center">
+        {hostedMe && <BillingBanner billing={billing} onManageBilling={manageBilling} />}
+        {hostedMe && <LegalBanner changed={hostedMe.legalUpdated ?? []} />}
         {offline && !projectId && <div className="banner" role="alert">The server isn't reachable, so you're editing a scratch buffer. Save, Export and chat come back when it does.</div>}
         <ChatPanel
           projectId={projectId}
@@ -420,7 +433,8 @@ export function App(props: { me?: Me | null } = {}) {
       )}
       {dialog?.kind === 'delete' && (
         <ConfirmDialog title="Delete project" confirmLabel="Delete project" danger onClose={() => setDialog(null)} onConfirm={() => doDelete(dialog.id)}>
-          <p>Delete <strong>{projects.find((p) => p.id === dialog.id)?.name ?? dialog.id}</strong>? It moves to the trash and leaves your projects list. Its versions, chat and audio files are kept.</p>
+          <p>Delete <strong>{projects.find((p) => p.id === dialog.id)?.name ?? dialog.id}</strong>? It moves to the Trash (in the sidebar), where you can restore it with its versions, chat and audio files.</p>
+          {hostedMe && <p className="muted">{TRASH_NOTE}</p>}
           {dialog.id === projectId && isDirty() && <p className="warn">It has unsaved edits, which are deleted too.</p>}
         </ConfirmDialog>
       )}
@@ -431,7 +445,7 @@ export function App(props: { me?: Me | null } = {}) {
             <h3>Your plan</h3>
             <p className="muted">{plan === 'free'
               ? "You're on Free: the editor, sounds and export, 3 projects and 200 MB of files. Shawarma's AI comes with Pro."
-              : `You're on ${billing?.trial ? "Pro's free trial" : 'Pro'}${billing?.periodEnd ? `; it ${billing.cancelAtPeriodEnd ? 'ends' : billing.trial ? 'becomes paid Pro' : 'renews'} on ${new Date(billing.periodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' })}` : ''}.`}</p>
+              : `You're on ${billing?.trial ? "Pro's free trial" : 'Pro'}.${billing && billingLine(billing) ? ` ${billingLine(billing)!.text}` : ''}`}</p>
             {billing && <AllowanceMeter status={billing} onUpgrade={() => { setSettingsOpen(false); setUpgradeOpen(true); }} />}
             <div className="row">
               {plan === 'free'
@@ -440,7 +454,19 @@ export function App(props: { me?: Me | null } = {}) {
             </div>
           </section>
         ) : undefined} />}
-      {upgradeOpen && <UpgradeDialog trialDays={trialDays} onClose={() => setUpgradeOpen(false)} />}
+      {upgradeOpen && <UpgradeDialog trialDays={trialDays} prices={billing?.prices ?? hostedMe?.billing.prices} onClose={() => setUpgradeOpen(false)} />}
+      {accountOpen && hostedMe && <AccountDialog email={hostedMe.user.email} onClose={() => setAccountOpen(false)} onManageBilling={manageBilling} />}
+      {trashOpen && <TrashDialog onClose={() => setTrashOpen(false)} onNotice={setNotice}
+        onRestored={() => { void listProjects().then(setProjects).catch(() => {}); }} />}
     </div>
+    <div className={`narrow-note${narrowOk ? ' narrow-ok' : ''}`} role="note">
+      <h1>Shawarma is best on a larger screen</h1>
+      <p>The editor, the chat and the song panels need a tablet or a computer. Open this page there to keep working on your songs.</p>
+      <div className="row">
+        <button className="btn btn-outline" onClick={() => { sessionStorage.setItem('shawarma.narrowOk', '1'); setNarrowOk(true); }}>Show the editor anyway</button>
+        <a href="/pricing">Pricing</a><a href="/source">Source code</a>
+      </div>
+    </div>
+    </>
   );
 }

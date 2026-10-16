@@ -47,3 +47,25 @@
 .billing-success-card { width: min(420px, 100%); display: flex; flex-direction: column; gap: 12px; align-items: flex-start; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
 .billing-success-card h1 { font: 700 20px/1.2 var(--ui); letter-spacing: -0.02em; margin: 0; }
 .billing-success-card p { margin: 0; color: var(--text-dim); font-size: 13.5px; line-height: 1.5; }
+
+.account-billing-line { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
+.account-billing-line.alert { color: var(--err); }
+.account-help { align-self: center; font-size: 12.5px; color: var(--text-dim); }
+.account-help:hover { color: var(--text); }
+.account-dialog h3 { margin: 0 0 4px; font: 600 14px/1.3 var(--ui); color: var(--text); }
+.account-dialog .modal-section p { margin: 0 0 8px; }
+.account-delete { display: flex; flex-direction: column; gap: 8px; }
+.account-delete label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-dim); }
+.account-delete strong { color: var(--text); overflow-wrap: anywhere; }
+
+/* banners over the app: a failed payment, a trial about to be charged, updated Terms/Privacy */
+.app-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--raised); color: var(--text); font-size: 13px; }
+.app-banner.alert { background: color-mix(in srgb, var(--err) 14%, var(--raised)); }
+.app-banner > span { flex: 1; min-width: 12em; }
+.app-banner a { color: inherit; }
+.app-banner .btn { height: 26px; padding: 0 10px; }
+.upgrade-then { margin: 0 0 8px; color: var(--text); font-size: 14px; }
+.upgrade-fine { font-size: 12px; }
+.upgrade-fine a { color: inherit; }
+/* taller than a short window: the dialog scrolls instead of running off the screen */
+.modal.account-dialog, .modal.trash-dialog { max-height: calc(88vh - 24px); max-height: calc(88dvh - 24px); overflow-y: auto; }

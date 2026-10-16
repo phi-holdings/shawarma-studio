@@ -16,10 +16,21 @@ export interface BillingStatus {
   /** Free: the action is "Start N-day free trial" (the Upgrade flow; Polar adds the trial). */
   canUpgrade: boolean;
   /** Why chat is refused when ok is false: pro_required (Free has no AI) or allowance. */
-  code?: 'pro_required' | 'allowance';
+  code?: 'pro_required' | 'allowance' | 'global_cap' | 'trial_cap';
   message?: string;
   cancelAtPeriodEnd: boolean;
   periodEnd: string | null;
+  /** Monthly or yearly Pro, when known. */
+  interval?: 'month' | 'year' | null;
+  /**
+   * `past_due`: Polar could not take the last payment and Pro is still kept (until paymentGraceEndsAt,
+   * 7 days past the period end). Null otherwise, including after the grace period (plan is then Free).
+   */
+  paymentIssue?: 'past_due' | null;
+  /** While past due: when Pro ends unless the payment goes through. */
+  paymentGraceEndsAt?: string | null;
+  /** Pro's prices in whole US dollars, before VAT (the server's PRICES). */
+  prices?: { month: number; year: number; currency: string };
 }
 
 /** The label of the action that starts Pro's trial (checkout). */

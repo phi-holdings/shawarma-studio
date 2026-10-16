@@ -168,6 +168,18 @@ body.resizing iframe { pointer-events: none; }
 .sidebar-empty { padding: 8px 12px; font-size: 13px; }
 .sidebar-foot { padding: 8px; border-top: 1px solid var(--line); flex: none; }
 .settings-link { width: 100%; justify-content: flex-start; gap: 10px; height: 36px; }
+.sidebar-credit { display: block; padding: 6px 8px 2px; color: var(--text-dim); font-size: 11.5px; text-decoration: none; }
+.sidebar-credit:hover { color: var(--text); text-decoration: underline; }
+
+/* phones: the editor needs room; say so instead of showing a broken layout (the public pages are responsive) */
+.narrow-note { display: none; }
+@media (max-width: 700px) {
+  .app:not(.narrow-ok) { display: none; }
+  .narrow-note:not(.narrow-ok) { display: flex; flex-direction: column; gap: 14px; justify-content: center; min-height: 100%; padding: 32px 24px; background: var(--bg); color: var(--text); box-sizing: border-box; }
+  .narrow-note h1 { margin: 0; font: 650 22px/1.25 var(--ui); letter-spacing: -0.02em; }
+  .narrow-note p { margin: 0; color: var(--text-dim); font-size: 15px; line-height: 1.5; }
+  .narrow-note .row { flex-wrap: wrap; }
+}
 .sidebar-show { position: fixed; left: 8px; top: 13px; z-index: 5; }
 .no-sidebar .chat-head { padding-left: 48px; }
 

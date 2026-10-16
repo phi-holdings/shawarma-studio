@@ -1,5 +1,6 @@
 // The per-page <head> tags of the prerendered public pages: title, description, canonical, Open Graph,
 // Twitter card, the font preload and (landing only) JSON-LD. Pure strings, so tests can read them.
+import { DEFAULT_PRICES } from '../landing/proPrices';
 import { absoluteUrl, OG_IMAGE, SITE_NAME, type PublicRoute } from './routes';
 
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -8,7 +9,7 @@ export const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ESC[c]);
 const meta = (attr: 'name' | 'property', key: string, content: string) =>
   `<meta ${attr}="${key}" content="${escapeHtml(content)}" />`;
 
-/** schema.org data for the landing page: the app (free to start, no paid price yet) and who makes it. */
+/** schema.org data for the landing page: the app (Free, and Pro monthly or yearly) and who makes it. */
 export function landingJsonLd(publicUrl: string, description: string): object {
   const home = absoluteUrl(publicUrl, '/');
   const org = { '@type': 'Organization', '@id': 'https://phi.holdings/#organization', name: 'phi holdings', url: 'https://phi.holdings' };
@@ -27,8 +28,11 @@ export function landingJsonLd(publicUrl: string, description: string): object {
         browserRequirements: 'Requires a modern browser with JavaScript and Web Audio.',
         image: absoluteUrl(publicUrl, OG_IMAGE.path),
         license: 'https://www.gnu.org/licenses/agpl-3.0.html',
-        // only the free tier has a price; paid plans are left out until pricing is set
-        offers: { '@type': 'Offer', name: 'Free', description: 'The editor, sounds and export', price: '0', priceCurrency: 'USD', url: home },
+        offers: [
+          { '@type': 'Offer', name: 'Free', description: 'The editor, sounds and export', price: '0', priceCurrency: 'USD', url: home },
+          { '@type': 'Offer', name: 'Pro monthly', description: 'The AI assistant, more projects and storage', price: String(DEFAULT_PRICES.month), priceCurrency: 'USD', url: absoluteUrl(publicUrl, '/pricing') },
+          { '@type': 'Offer', name: 'Pro yearly', description: 'The AI assistant, more projects and storage', price: String(DEFAULT_PRICES.year), priceCurrency: 'USD', url: absoluteUrl(publicUrl, '/pricing') },
+        ],
         publisher: { '@id': org['@id'] },
       },
     ],

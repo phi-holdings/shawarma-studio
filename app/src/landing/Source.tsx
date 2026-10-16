@@ -1,7 +1,8 @@
 import { soundCreditsFor } from '@shawarma/shared';
+import { BUILD, STUDIO_REPO } from '../build';
 import { DocPage, Mail, type DocPageProps } from './DocPage';
 
-export const STUDIO_REPO = 'https://github.com/phi-holdings/shawarma-studio';
+export { STUDIO_REPO };
 
 export function Source({ links }: DocPageProps) {
   return (
@@ -10,6 +11,9 @@ export function Source({ links }: DocPageProps) {
 
       <h2>Getting the source</h2>
       <p>The complete source of the editor and the song checker is public at <a href="https://github.com/phi-holdings/shawarma-studio" rel="noreferrer">github.com/phi-holdings/shawarma-studio</a>. You can browse it, download it, or clone it, at no charge and without an account. Each release of the site is built from that repository.</p>
+      {BUILD.commit
+        ? <p>The version running now is built from commit <a href={BUILD.sourceUrl} rel="noreferrer"><code>{BUILD.commit.slice(0, 12)}</code></a>{BUILD.dirty ? ', with changes not yet published there: write to us for an archive of them' : ''}.</p>
+        : <p>The version running now is the newest one in <a href={BUILD.sourceUrl} rel="noreferrer">that repository</a>.</p>}
       <p>If you cannot reach GitHub, write to <Mail subject="Source code request" /> and we will send you an archive of the version currently running.</p>
 
       <h2>What is not part of it</h2>

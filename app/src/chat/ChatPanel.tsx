@@ -169,7 +169,14 @@ export function ChatPanel(props: {
       } else if (e.type === 'done') {
         patchAssistant((a) => { a.cost = e.costUsd; if (e.stopped) a.stopped = true; });
         setCost({ last: e.costUsd, today: e.spentTodayUsd });
-      } else if (e.type === 'error') setItems((x) => [...x, errorItem(e.message, e.code === 'auth')]);
+      } else if (e.type === 'error') {
+        // hosted limit codes mid-turn (allowance, pro_required, global_cap, trial_cap) are plain sentences already;
+        // canUpgrade adds the trial / upgrade button
+        if (e.code && e.code !== 'auth') {
+          const upgrade = Boolean(e.canUpgrade) && Boolean(props.onUpgrade);
+          setItems((x) => [...x, { kind: 'error', text: e.message, ...(upgrade ? { upgrade: true } : {}) }]);
+        } else setItems((x) => [...x, errorItem(e.message, e.code === 'auth')]);
+      }
       else if (e.type === 'analysis_request') {
         let report: AnalysisReport | { error: string };
         try { report = await props.analyse(e.code, e.fromSec, e.toSec); }

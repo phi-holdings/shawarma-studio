@@ -3,6 +3,7 @@
 import { renderToString } from 'react-dom/server';
 import { defaultLinks } from '../landing/contact';
 import { Landing } from '../landing/Landing';
+import { Pricing } from '../landing/Pricing';
 import { Privacy } from '../landing/Privacy';
 import { Source } from '../landing/Source';
 import { Terms } from '../landing/Terms';
@@ -15,6 +16,7 @@ export { robotsTxt, sitemapXml } from './crawl';
 export function renderBody(page: PublicPage): string {
   switch (page) {
     case 'landing': return renderToString(<Landing signInHref={SIGN_IN_HREF} links={defaultLinks} />);
+    case 'pricing': return renderToString(<Pricing signInHref={SIGN_IN_HREF} links={defaultLinks} />);
     case 'privacy': return renderToString(<Privacy links={defaultLinks} />);
     case 'terms': return renderToString(<Terms links={defaultLinks} />);
     case 'source': return renderToString(<Source links={defaultLinks} />);

@@ -2,7 +2,7 @@
 // sitemap, robots.txt, the preview server and the tests all read. The server keeps the same paths in
 // server/src/http/appStatic.ts (PUBLIC_PAGES); a test there pins them to this list.
 
-export type PublicPage = 'landing' | 'privacy' | 'terms' | 'source';
+export type PublicPage = 'landing' | 'pricing' | 'privacy' | 'terms' | 'source';
 
 export interface PublicRoute {
   /** URL path, no trailing slash except the root. */
@@ -16,7 +16,7 @@ export interface PublicRoute {
   sources: string[];
 }
 
-const shared = ['src/landing/landing.css', 'src/landing/contact.ts'];
+const shared = ['src/landing/landing.css', 'src/landing/contact.ts', 'src/landing/proPrices.ts'];
 const doc = ['src/landing/DocPage.tsx', ...shared];
 
 export const PUBLIC_ROUTES: readonly PublicRoute[] = [
@@ -30,12 +30,21 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     sources: ['src/landing/Landing.tsx', 'src/landing/figures.ts', ...shared],
   },
   {
+    path: '/pricing',
+    page: 'pricing',
+    file: 'site/pricing/index.html',
+    title: 'Pricing · Shawarma REPL',
+    description:
+      'Shawarma REPL pricing: the editor, sounds and export are free. Pro adds the AI assistant for $12 a month or $120 a year, with a 7-day free trial.',
+    sources: ['src/landing/Pricing.tsx', ...doc],
+  },
+  {
     path: '/privacy',
     page: 'privacy',
     file: 'site/privacy/index.html',
     title: 'Privacy · Shawarma REPL',
     description:
-      'What Shawarma REPL keeps about you, why, and who else sees it: your Google sign-in basics, your songs and chats, and the services that process them.',
+      'What Shawarma REPL keeps about you, why, who else sees it, how long it is kept, and how to export or delete it yourself.',
     sources: ['src/landing/Privacy.tsx', ...doc],
   },
   {
@@ -44,7 +53,7 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     file: 'site/terms/index.html',
     title: 'Terms · Shawarma REPL',
     description:
-      'The rules for using Shawarma REPL: your songs are yours, what the free and paid plans include, fair use, and the limits of AI suggestions.',
+      'The rules for using Shawarma REPL: who runs it, your songs are yours, payments and refunds, acceptable use, AI output and the limits of the service.',
     sources: ['src/landing/Terms.tsx', ...doc],
   },
   {
@@ -53,7 +62,7 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     file: 'site/source/index.html',
     title: 'Source code · Shawarma REPL',
     description:
-      'Shawarma REPL is free software under the AGPL-3.0. How to get the complete source code of the version we run, at no charge.',
+      'The Shawarma REPL editor is free software under the AGPL-3.0, built on Strudel. How to get the complete source code of the version we run, at no charge.',
     sources: ['src/landing/Source.tsx', ...doc],
   },
 ];

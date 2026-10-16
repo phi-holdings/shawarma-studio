@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { umamiTag, withAnalytics } from './analytics';
+import { reportOriginTag, umamiTag, withAnalytics } from './analytics';
 import { scrubBrowserEvent } from '../monitoring';
 
 const ID = '0b6a3d3e-1c2f-4e8a-9b7c-123456789abc';
@@ -33,4 +33,10 @@ test('browser error reports: no breadcrumbs, user, extra or query; emails redact
   expect(out.extra).toBeUndefined();
   expect(out.breadcrumbs).toEqual([]);
   expect(out.exception?.values?.[0].value).toHaveLength(300);
+});
+
+test('browser error reports: the ingest origin is named for the CSP, never the key', () => {
+  expect(reportOriginTag(undefined)).toBe('');
+  expect(reportOriginTag('http://k@o1.ingest.example/1')).toBe('');
+  expect(reportOriginTag('https://publickey@o1.ingest.sentry.io/123')).toBe('<meta name="shawarma-connect" content="https://o1.ingest.sentry.io">');
 });

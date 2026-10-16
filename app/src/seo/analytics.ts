@@ -22,3 +22,17 @@ export function withAnalytics(html: string, filename: string, tag: string): stri
   if (!tag || /runtime\.html$/.test(filename)) return html;
   return html.replace('</head>', `    ${tag}\n  </head>`);
 }
+
+/**
+ * `<meta name="shawarma-connect">` naming the browser error tracker's ingest origin (from the build's
+ * VITE_SENTRY_DSN), so the server's Content-Security-Policy lets the reports out
+ * (server/src/http/securityHeaders.ts pageOrigins). '' when there is no valid https DSN.
+ */
+export function reportOriginTag(dsn: string | undefined): string {
+  const d = dsn?.trim();
+  if (!d) return '';
+  let u: URL;
+  try { u = new URL(d); } catch { return ''; }
+  if (u.protocol !== 'https:') return '';
+  return `<meta name="shawarma-connect" content="${u.origin}">`;
+}

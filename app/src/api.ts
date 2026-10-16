@@ -41,7 +41,9 @@ export async function failure(res: Response): Promise<Error> {
 export interface MeBilling {
   plan: 'free' | 'pro'; status: string; ok: boolean; usedPercent: number; resetsAt: string;
   trial: boolean; trialEndsAt: string | null; trialDays: number; canUpgrade: boolean;
-  code?: 'pro_required' | 'allowance'; message?: string; cancelAtPeriodEnd: boolean; periodEnd: string | null;
+  code?: 'pro_required' | 'allowance' | 'global_cap' | 'trial_cap'; message?: string; cancelAtPeriodEnd: boolean; periodEnd: string | null;
+  /** Older servers leave these out. */
+  interval?: 'month' | 'year' | null; paymentIssue?: 'past_due' | null; paymentGraceEndsAt?: string | null; prices?: { month: number; year: number; currency: string };
 }
 /** GET /api/me: who is signed in; hosted mode adds the plan and allowance. */
 export type Me =
@@ -50,6 +52,8 @@ export type Me =
     mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean; storageBytes: number }; admin?: boolean;
     /** Where the sound packs are served (self-hosted); absent: Strudel's CDNs. */
     packsUrl?: string;
+    /** Pages changed since this person last accepted them (the "updated" notice). */
+    legalUpdated?: ('terms' | 'privacy')[];
   };
 
 /** The signed-in person, or null when nobody is (hosted mode, signed out). Throws OfflineError when the server is down. */

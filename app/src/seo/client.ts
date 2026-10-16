@@ -10,3 +10,5 @@ import { showSignInError } from './signInError';
 showSignInError(document, location.search);
 // the showcase's tabs and Hairline figures load after the page is shown
 void import('../landing/figures').then((m) => m.mountShowcase(document));
+// the server's prices, if they differ from the prerendered ones
+void import('./prices').then((m) => m.loadPrices(document));
