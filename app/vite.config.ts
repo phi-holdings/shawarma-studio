@@ -2,12 +2,18 @@ import react from '@vitejs/plugin-react';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type Plugin } from 'vite';
+import { createRequire } from 'node:module';
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import { inlineModuleImports, runtimeOriginGate } from './src/dev/runtimeCors';
 import { PUBLIC_ROUTES } from './src/seo/routes';
 
 const sharedSrc = `/@fs${path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../shared/src')}/`;
 const serverPort = Number(process.env.SHAWARMA_SERVER_PORT ?? 8787);
+// The node_modules that holds the app's packages. Inside the private repo that is the parent
+// workspace's, outside studio/, which Vite's own workspace root would not let the dev server read
+// (the font files were refused).
+const resolvedVite = createRequire(import.meta.url).resolve('vite');
+const depsRoot = resolvedVite.slice(0, resolvedVite.indexOf(`${path.sep}node_modules${path.sep}`) + '/node_modules'.length);
 
 /** Gate + inline-import rewrite for the opaque-origin song runtime; see src/dev/runtimeCors.ts. */
 function runtimeFrame(): Plugin {
@@ -67,7 +73,7 @@ function prerenderPublicSite(): Plugin {
 
 export default defineConfig({
   plugins: [react(), runtimeFrame(), previewPublicSite(), prerenderPublicSite()],
-  server: { port: 5173, host: '127.0.0.1', proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
+  server: { port: 5173, host: '127.0.0.1', fs: { allow: [searchForWorkspaceRoot(process.cwd()), depsRoot] }, proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
   preview: { proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
   // scan both pages up front so the runtime's deps don't trigger a mid-session re-optimise + reload
   optimizeDeps: { entries: ['index.html', 'runtime.html'] },

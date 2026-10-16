@@ -102,6 +102,11 @@ test('sign in, chat, hit the allowance, upgrade through Polar, chat again, sign 
   // back, sign out: the landing page again, and the API refuses the old session
   await page.goto('/');
   await page.getByRole('button', { name: /^Account: Hosted Tester, Pro plan$/ }).click();
+  // the AGPL source offer, privacy and terms are one click away for signed-in people too
+  const about = page.getByRole('navigation', { name: 'About Shawarma' });
+  await expect(about.getByRole('link', { name: 'Source code' })).toHaveAttribute('href', '/source');
+  await expect(about.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
+  await expect(about.getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('link', { name: /Continue with Google/ }).first()).toBeVisible();
   expect((await page.request.get('/api/me')).status()).toBe(401);

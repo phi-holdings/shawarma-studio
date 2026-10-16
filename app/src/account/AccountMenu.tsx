@@ -1,5 +1,6 @@
 // The account at the bottom of the sidebar (hosted mode): who is signed in and their plan; opens a panel
-// with this month's allowance, Upgrade (Free), Manage billing and Sign out.
+// with this month's allowance, Upgrade (Free), Manage billing and Sign out, and links to the source
+// code (AGPL: everyone using the service must be offered it), privacy and terms.
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../api';
 import { AllowanceMeter } from './AllowanceMeter';
@@ -69,6 +70,11 @@ export function AccountMenu(props: {
               {busy === 'signout' ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
+          <nav className="account-links" aria-label="About Shawarma">
+            <a href="/source" target="_blank" rel="noopener">Source code</a>
+            <a href="/privacy" target="_blank" rel="noopener">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener">Terms</a>
+          </nav>
         </div>
       )}
       <button type="button" className="btn btn-ghost account-button" aria-expanded={open} aria-label={`Account: ${props.me.user.name ?? props.me.user.email}, ${plan === 'pro' ? 'Pro' : 'Free'} plan`}
