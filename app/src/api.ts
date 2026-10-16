@@ -46,7 +46,11 @@ export interface MeBilling {
 /** GET /api/me: who is signed in; hosted mode adds the plan and allowance. */
 export type Me =
   | { mode: 'local'; user: { id: string; email: string; name: string | null; avatarUrl: string | null } }
-  | { mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean; storageBytes: number } };
+  | {
+    mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean; storageBytes: number };
+    /** Where the sound packs are served (self-hosted); absent: Strudel's CDNs. */
+    packsUrl?: string;
+  };
 
 /** The signed-in person, or null when nobody is (hosted mode, signed out). Throws OfflineError when the server is down. */
 export async function getMe(): Promise<Me | null> {
@@ -129,7 +133,9 @@ export const recordDecision = (id: string, d: { proposalId: string; status: 'rej
 /** Asks the running chat turn to stop; it still sends the edits made so far as a partial proposal. */
 export const stopChat = (id: string) => post(`/api/projects/${id}/chat/stop`, {}).then(j<{ stopped: boolean }>);
 export const getVersion = (id: string, vid: string) => doFetch(`/api/projects/${id}/versions/${vid}`).then(j<{ code: string }>);
-export const inspectCode = (code: string, projectId?: string | null) => post('/api/inspect', projectId ? { code, projectId } : { code }).then(j<InspectReport>);
+/** `typing`: an editor check while typing; the server drops it if a newer one arrives before it runs (409). */
+export const inspectCode = (code: string, projectId?: string | null, opts: { typing?: boolean } = {}) =>
+  post('/api/inspect', { code, ...(projectId ? { projectId } : {}), ...(opts.typing ? { typing: true } : {}) }).then(j<InspectReport>);
 /** Server pre-flight before a song runs in the page: `hang` when it never finished (see /api/precheck). */
 export const precheckCode = (code: string) => post('/api/precheck', { code }).then(j<{ ok: boolean; hang?: boolean; error?: string }>)
   .then((r) => ({ hang: Boolean(r.hang), ...(r.error ? { error: r.error } : {}) }));

@@ -1,5 +1,7 @@
 // The sample packs the editor loads (app/src/strudel/setup.ts) and the check service knows
-// (check-service/src/sounds.ts). They are served by Strudel's sample CDN.
+// (check-service/src/sounds.ts). Local mode loads them from Strudel's sample CDN and the GM soundfonts
+// from felixroos.github.io; hosted Shawarma serves its packs itself (deploy/fetch-samples.mts copies them
+// to one folder, laid out like the CDN: `<map>`, `<folder>/…`, `gm/<font>.js`), see packSources().
 //
 // Hosted Shawarma offers only packs whose licence allows it. Local mode (your own machine, and this
 // public studio) loads all of them, as strudel.cc does. The app learns the mode from /api/me; the
@@ -33,6 +35,63 @@ export interface SoundPack {
 }
 
 export const SAMPLE_CDN = 'https://strudel.b-cdn.net';
+/** Where @strudel/soundfonts loads the GM instruments from by default (`<url>/<font>.js`). */
+export const GM_SOUNDFONT_CDN = 'https://felixroos.github.io/webaudiofontdata/sound';
+
+/** Where the sample maps/files and the GM soundfonts come from. */
+export interface SoundSources {
+  /** Sample maps at `<samples>/<map>`, sample files at `<samples>/<folder>/…`. */
+  samples: string;
+  /** GM soundfonts at `<soundfonts>/<font>.js`. */
+  soundfonts: string;
+}
+
+/**
+ * The sources for a self-hosted packs URL (SHAWARMA_PACKS_URL, e.g. https://shawarma.example/packs),
+ * or Strudel's CDNs when there is none. A URL that is not http(s) is ignored (CDNs).
+ */
+export function soundSources(packsUrl?: string | null): SoundSources {
+  const base = selfHostedPacksUrl(packsUrl);
+  return base ? { samples: base, soundfonts: `${base}/gm` } : { samples: SAMPLE_CDN, soundfonts: GM_SOUNDFONT_CDN };
+}
+
+/** A packs URL normalised (no trailing slash, no query or hash), or null unless it is an http(s) URL. */
+export function selfHostedPacksUrl(value?: string | null): string | null {
+  const v = value?.trim();
+  if (!v) return null;
+  let u: URL;
+  try { u = new URL(v); } catch { return null; }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  return `${u.origin}${u.pathname.replace(/\/+$/, '')}`;
+}
+
+/**
+ * A sample map as served from `base` (`<base>/<folder>/` holds its files): every `_base` (top level and
+ * per sound) is replaced, so the map works without the folder being passed to samples() too.
+ */
+export function rewriteSampleMap(map: Record<string, unknown>, filesBase: string): Record<string, unknown> {
+  const base = filesBase.endsWith('/') ? filesBase : `${filesBase}/`;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(map)) {
+    if (k === '_base') out[k] = base;
+    else if (v && typeof v === 'object' && !Array.isArray(v) && '_base' in v) out[k] = { ...(v as Record<string, unknown>), _base: base };
+    else out[k] = v;
+  }
+  if (!('_base' in out)) return { _base: base, ...out };
+  return out;
+}
+
+/** Every file path a sample map names (relative to its base), e.g. `bd/10_bd.wav`. */
+export function sampleMapFiles(map: Record<string, unknown>): string[] {
+  const files = new Set<string>();
+  const add = (v: unknown) => {
+    if (typeof v === 'string') files.add(v);
+    else if (Array.isArray(v)) v.forEach(add);
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) if (k !== '_base') add(x);
+  };
+  for (const [k, v] of Object.entries(map)) if (k !== '_base') add(v);
+  return [...files];
+}
 
 export const SOUND_PACKS: readonly SoundPack[] = [
   {

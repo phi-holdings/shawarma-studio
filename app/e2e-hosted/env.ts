@@ -8,6 +8,13 @@ export const checkPort = Number(process.env.E2E_HOSTED_CHECK_PORT ?? serverPort 
 export const oidcPort = Number(process.env.E2E_HOSTED_OIDC_PORT ?? 8995);
 export const polarPort = Number(process.env.E2E_HOSTED_POLAR_PORT ?? 8996);
 export const publicUrl = `http://localhost:${appPort}`;
+/** The production build served by the hosted server itself (security headers), and the stand-in for the self-hosted sound packs. */
+export const prodPort = Number(process.env.E2E_HOSTED_PROD_PORT ?? serverPort + 2);
+export const packsPort = Number(process.env.E2E_HOSTED_PACKS_PORT ?? serverPort + 3);
+export const prodUrl = `http://localhost:${prodPort}`;
+export const prodDbName = `shawarma_e2e_hosted_${prodPort}`;
+export const prodDist = path.join(os.tmpdir(), `shawarma-e2e-hosted-dist-${prodPort}`);
+export const prodDataDir = path.join(os.tmpdir(), `shawarma-e2e-hosted-prod-files-${prodPort}`);
 export const dbName = `shawarma_e2e_hosted_${serverPort}`;
 export const databaseUrl = `postgres://shawarma:shawarma@127.0.0.1:54329/${dbName}`;
 export const dataDir = path.join(os.tmpdir(), `shawarma-e2e-hosted-files-${serverPort}`);
