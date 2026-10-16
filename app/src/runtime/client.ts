@@ -3,6 +3,8 @@
 import { CONNECT, HELLO, parseReply, parseRuntimeMessage, type ReplyMap, type Request, type RuntimeMessage, type WireHap } from './protocol';
 import { RuntimeError } from './errors';
 import { Handshake } from './handshake';
+import { PACKS_PARAM } from './packs';
+import type { SoundPackSet } from '@shawarma/shared';
 import { precheckCode } from '../api';
 import type { ChunkingOptions } from '../audio/chunks';
 
@@ -44,13 +46,18 @@ const modalOpen = () => document.querySelector('.modal-backdrop, [role="dialog"]
  * port): a different site, so the browser's site isolation runs the runtime in its own process and a
  * song that spins forever cannot freeze the app. Other hosts keep the app's own origin.
  */
-export function runtimeUrl(src: string, nonce: string, here: Location | URL = location): URL {
+export function runtimeUrl(src: string, nonce: string, here: Location | URL = location, packs: SoundPackSet = 'all'): URL {
   const url = new URL(src, here.href);
   if (here.hostname === 'localhost') url.hostname = '127.0.0.1';
   else if (here.hostname === '127.0.0.1') url.hostname = 'localhost';
   url.searchParams.set('n', nonce);
+  if (packs !== 'all') url.searchParams.set(PACKS_PARAM, packs);
   return url;
 }
+
+/** Which sample packs the runtime loads (hosted: only cleanly licensed ones). From /api/me, before the first load. */
+let soundPacks: SoundPackSet = 'all';
+export function setSoundPacks(packs: SoundPackSet) { soundPacks = packs; }
 
 export class RuntimeClient {
   frame: HTMLIFrameElement;
@@ -95,7 +102,7 @@ export class RuntimeClient {
     this.src = src;
     this.handshake = new Handshake({
       navigate: (nonce) => {
-        this.frame.setAttribute('src', runtimeUrl(this.src, nonce).href);
+        this.frame.setAttribute('src', runtimeUrl(this.src, nonce, location, soundPacks).href);
       },
       connect: () => this.connect(),
       connected: () => this.connected(),

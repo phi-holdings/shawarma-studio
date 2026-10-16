@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { getMe, SIGNED_OUT_EVENT, type Me } from './api';
 import { App } from './App';
+import { setSoundPacks } from './runtime/client';
 import { BillingSuccess } from './account/BillingSuccess';
 import { defaultLinks } from './landing/contact';
 import { Landing } from './landing/Landing';
@@ -28,7 +29,11 @@ export function Root() {
   useEffect(() => {
     if (publicPage) return;
     getMe()
-      .then((me) => setState(me ? { kind: 'app', me } : { kind: 'signed-out' }))
+      .then((me) => {
+        // hosted Shawarma offers only cleanly licensed sample packs (set before the runtime first loads)
+        setSoundPacks(me?.mode === 'hosted' ? 'hosted' : 'all');
+        setState(me ? { kind: 'app', me } : { kind: 'signed-out' });
+      })
       // server down or an older server: the app handles being offline itself
       .catch(() => setState({ kind: 'app', me: null }));
     // the session ended while the app was open (expired, signed out in another tab)

@@ -58,6 +58,25 @@ test('sign in, chat, hit the allowance, upgrade through Polar, chat again, sign 
   await expect(page.getByRole('heading', { level: 2, name: /Hosted song/ })).toBeVisible();
   await page.evaluate(() => (window as any).__editor.current.setCode('s("bd sd hh*8")'));
 
+  // only the cleanly licensed sample packs: the runtime is told so, the sound browser has no drum
+  // machines, and the song check calls them unknown
+  await expect(page.locator('iframe.runtime-frame')).toHaveAttribute('src', /[?&]p=hosted(&|$)/);
+  await page.getByRole('tab', { name: 'Sounds' }).click();
+  await expect(page.getByText('Loading sounds from the song runtime…')).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.getByRole('button', { name: 'Play bd', exact: true }).first()).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Search sounds' }).fill('tr808');
+  await expect(page.getByText('RolandTR808', { exact: true })).toHaveCount(0);
+  await page.getByRole('searchbox', { name: 'Search sounds' }).fill('mridangam');
+  await expect(page.getByRole('button', { name: /^Play ta \(mridangam\)$/i }).first()).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Search sounds' }).fill('');
+  const issues = await page.evaluate(async () => {
+    const res = await fetch('/api/inspect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'stack(s("bd sd").bank("RolandTR909"), s("casio"), s("hh"))' }) });
+    return ((await res.json()) as { issues: { kind: string; message: string }[] }).issues;
+  });
+  expect(issues.map((i) => i.kind)).toEqual(['unknown_sound']);
+  for (const n of ['RolandTR909_bd', 'RolandTR909_sd', 'casio']) expect(issues[0].message).toContain(n);
+  await page.getByRole('tab', { name: 'Code' }).click();
+
   // chat with the (fake) assistant; no dollar amounts in hosted mode; Think deeper is Pro only
   await expect(page.locator('label.toggle', { hasText: 'Think deeper' }).locator('input')).toBeDisabled();
   await send(page, 'add a clap');
@@ -125,4 +144,8 @@ test('the public pages render for everyone', async ({ page }) => {
     await page.goto(p);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(heading);
   }
+  // the sound credits the CC BY licences ask for
+  await expect(page.getByRole('link', { name: 'Salamander Grand Piano V3' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'CC BY-SA 4.0' })).toBeVisible();
+  await expect(page.getByText('tidal-drum-machines')).toHaveCount(0);
 });

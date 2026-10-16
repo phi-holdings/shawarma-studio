@@ -14,6 +14,15 @@ The public half of Shawarma REPL:
 The hosted platform that adds the AI assistant, accounts and billing is a separate program. The editor talks to it
 over HTTP only; nothing here imports it.
 
+## Sounds
+
+The built-in sample packs are played from Strudel's sample CDN (`strudel.b-cdn.net`) and listed with their
+licences in `shared/src/soundPacks.ts`. Locally the editor loads all of them, as strudel.cc does. Hosted
+Shawarma offers only the cleanly licensed ones (Salamander piano CC BY 3.0, VCSL CC0, uzu-drumkit Unlicense,
+mridangam CC BY-SA 4.0, plus the GM instruments) and credits them on `/source`: the app learns the mode from
+`/api/me` and passes it to the song runtime in its URL; the check service reads `SOUND_PACKS=hosted|all` (default
+`all`) and then treats the other packs' sounds as unknown and leaves the reference entries that use them out.
+
 ## Run
 
 Needs Node >= 22.15 and pnpm.

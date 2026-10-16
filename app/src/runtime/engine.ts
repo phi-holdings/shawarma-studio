@@ -13,7 +13,7 @@ import { SuperdoughAudioController } from 'superdough/superdoughoutput.mjs';
 // their gain nodes from it. It must point at the same context as the dist's, or every hap with
 // .room()/.delay() fails to connect in an offline render.
 import { setAudioContext as setSourceAudioContext } from 'superdough/audioContext.mjs';
-import { createLoopGuard, fromProgram, guardLoops, loopProgram, type LoopGuardError } from '@shawarma/shared';
+import { createLoopGuard, fromProgram, guardLoops, loopProgram, type LoopGuardError, type SoundPackSet } from '@shawarma/shared';
 import { installRealmGuards } from './guardRealm';
 import { LIVE_AUDIO_OPTIONS, loadModules, prebake } from '../strudel/setup';
 import { DEFAULT_CHUNKING, onsetHaps, planChunks, prerollSamples } from '../audio/chunks';
@@ -108,10 +108,10 @@ async function irsReady(timeoutMs = 10_000) {
 }
 
 
-export function createEngine(emit: Emit, ui: { showUnlock(onClick: () => Promise<boolean>): void; hideUnlock(): void; visuals: HTMLElement }) {
+export function createEngine(emit: Emit, ui: { showUnlock(onClick: () => Promise<boolean>): void; hideUnlock(): void; visuals: HTMLElement }, packs: SoundPackSet = 'all') {
   const visuals = createVisuals(ui.visuals, (height) => emit({ type: 'visuals', height }));
   installSongLog(emit);
-  const ready = (async () => { await loadModules(); await prebake(); })();
+  const ready = (async () => { await loadModules(); await prebake(packs); })();
   /** Re-sent on every (re)connect so a late parent still learns it. */
   const announceReady = () => { void ready.then(() => { emit({ type: 'ready' }); visuals.resend(); }, () => {}); };
   let audioInitFor: BaseAudioContext | null = null;

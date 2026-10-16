@@ -1,11 +1,20 @@
 import { expect, test } from 'vitest';
 import { runtimeUrl } from './client';
+import { packsFromSearch } from './packs';
 
 test('the runtime is loaded from the other loopback hostname (another site), same scheme and port', () => {
   expect(runtimeUrl('/runtime.html', 'abc', new URL('http://localhost:5173/')).href).toBe('http://127.0.0.1:5173/runtime.html?n=abc');
   expect(runtimeUrl('/runtime.html', 'abc', new URL('http://127.0.0.1:8787/x')).href).toBe('http://localhost:8787/runtime.html?n=abc');
   // any other host keeps the app's own origin
   expect(runtimeUrl('/runtime.html', 'abc', new URL('http://my-mac.local:5173/')).href).toBe('http://my-mac.local:5173/runtime.html?n=abc');
+});
+
+test('hosted mode tells the runtime to load only the hosted sample packs; local mode loads all', () => {
+  const hosted = runtimeUrl('/runtime.html', 'abc', new URL('https://shawarma.example/'), 'hosted');
+  expect(hosted.href).toBe('https://shawarma.example/runtime.html?n=abc&p=hosted');
+  expect(packsFromSearch(hosted.search)).toBe('hosted');
+  expect(packsFromSearch(runtimeUrl('/runtime.html', 'abc', new URL('http://localhost:5173/'), 'all').search)).toBe('all');
+  expect(packsFromSearch('?n=abc&p=bogus')).toBe('all');
 });
 
 test('WebKit (Safari, any iOS browser) is recognised as having no site isolation', async () => {

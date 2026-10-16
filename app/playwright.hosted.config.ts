@@ -24,7 +24,7 @@ export default defineConfig({
     launchOptions: { args: ['--mute-audio', '--site-per-process', '--autoplay-policy=document-user-activation-required'] },
   },
   webServer: [
-    { command: `CHECK_PORT=${checkPort} SHAWARMA_CACHE_DIR=${cacheDir} pnpm -C ../.. --filter @shawarma/check-service start`, port: checkPort, reuseExistingServer: false },
+    { command: `CHECK_PORT=${checkPort} SHAWARMA_CACHE_DIR=${cacheDir} SOUND_PACKS=hosted pnpm -C ../.. --filter @shawarma/check-service start`, port: checkPort, reuseExistingServer: false },
     { command: `DEV_OIDC_PORT=${oidcPort} pnpm -C ../.. --filter @shawarma/server dev:oidc`, port: oidcPort, reuseExistingServer: false },
     {
       command: `DEV_POLAR_PORT=${polarPort} DEV_POLAR_WEBHOOK_URL=http://127.0.0.1:${serverPort}/api/billing/polar/webhook POLAR_WEBHOOK_SECRET=${devWebhookSecret} pnpm -C ../.. --filter @shawarma/server dev:polar`,

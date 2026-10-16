@@ -1,5 +1,7 @@
 // BM25 keyword search over the reference. Words in the title count more than words in the content.
 import { readFileSync } from 'node:fs';
+import { usesOnlySoundsOf, type SoundPackSet } from '@shawarma/shared';
+import { SOUND_PACK_SET } from '../config';
 import type { ReferenceEntry, ReferenceFile, ReferenceKind } from './types';
 
 export interface ReferenceHit { kind: ReferenceKind; ref: string; title: string; source: string; content: string; why: string }
@@ -85,13 +87,19 @@ export class ReferenceIndex {
   }
 }
 
-let shipped: ReferenceIndex | null = null;
+const shipped = new Map<SoundPackSet, ReferenceIndex>();
 
-/** The index over the generated reference/strudel-reference.json (loaded once). */
-export function shippedReference(): ReferenceIndex {
-  if (!shipped) {
+/**
+ * The index over the generated reference/strudel-reference.json (loaded once per pack set). With the
+ * hosted packs (SOUND_PACKS=hosted), entries whose text uses a sound outside them (drum-machine banks,
+ * wavetables, Dirt-Samples names) are left out, so the assistant is not shown sounds it cannot use.
+ */
+export function shippedReference(set: SoundPackSet = SOUND_PACK_SET): ReferenceIndex {
+  let index = shipped.get(set);
+  if (!index) {
     const file = JSON.parse(readFileSync(new URL('../../reference/strudel-reference.json', import.meta.url), 'utf8')) as ReferenceFile;
-    shipped = new ReferenceIndex(file.entries);
+    index = new ReferenceIndex(file.entries.filter((e) => usesOnlySoundsOf(e.content, set)));
+    shipped.set(set, index);
   }
-  return shipped;
+  return index;
 }

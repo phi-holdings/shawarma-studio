@@ -71,6 +71,20 @@ test('the shipped reference: licence note, no example tunes, finds lpf', () => {
   expect(shippedReference().search('low pass filter cutoff', { kinds: ['function'] }).map((h) => h.ref)).toContain('function:lpf');
 });
 
+test('hosted packs: the reference leaves out entries that use drum machines, wavetables or Dirt sounds', () => {
+  const all = shippedReference('all');
+  const hosted = shippedReference('hosted');
+  expect(hosted.size).toBeLessThan(all.size);
+  expect(all.size - hosted.size).toBeLessThan(50);   // a few dozen examples, not whole topics
+  const refs = (idx: ReturnType<typeof shippedReference>, q: string) => idx.search(q, { limit: 10 }).map((h) => h.ref);
+  expect(refs(all, 'bank RolandTR909')).toContain('function:bank');
+  expect(refs(hosted, 'bank RolandTR909')).not.toContain('function:bank');
+  for (const q of ['bank tr909 drum machine', 'wavetable wt_digital', 'casio sample']) {
+    for (const h of hosted.search(q, { limit: 10 })) expect(h.content).not.toMatch(/\.bank\(\s*["'`](?!mridangam)/i);
+  }
+  expect(refs(hosted, 'low pass filter cutoff')).toContain('function:lpf');
+});
+
 test('GET /reference: results shape, filters and bad input', async () => {
   const app = createCheckApp({ key: 'k' });
   const get = (qs: string, key = 'k') => app.request(`/reference${qs}`, { headers: { 'x-check-key': key } });

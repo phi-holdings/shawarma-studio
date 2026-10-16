@@ -1,4 +1,4 @@
-import { arrangeInfo, buildSongMap, type EventQuery, type InspectReport, type Issue } from '@shawarma/shared';
+import { arrangeInfo, buildSongMap, type EventQuery, type InspectReport, type Issue, type SoundPackSet } from '@shawarma/shared';
 import { FALLBACK_CYCLES, INSPECT_DEADLINE_MS, MAX_CYCLES, MAX_EVENTS } from './sandbox/limits.mjs';
 import { sandboxAnalyse, sandboxQuery } from './sandbox';
 import { knownSounds } from './sounds';
@@ -9,7 +9,8 @@ export { INSPECT_DEADLINE_MS, MAX_CYCLES, MAX_EVENTS };
 const RESERVED = ['piano', 'note', 'sound', 'gain', 'stack', 'arrange', 'silence'];
 
 /** Check a song. The code itself only ever runs in the sandbox process (see sandbox.ts). */
-export async function inspect(code: string, opts: { extraSounds?: Iterable<string> } = {}): Promise<InspectReport> {
+/** `packs`: the sound packs to check against (default SOUND_PACKS; tests pass it). */
+export async function inspect(code: string, opts: { extraSounds?: Iterable<string>; packs?: SoundPackSet } = {}): Promise<InspectReport> {
   const extra = new Set(opts.extraSounds ?? []);   // e.g. the project's own samples folder names
   const issues: Issue[] = [];
   for (const name of RESERVED) {
@@ -37,7 +38,7 @@ export async function inspect(code: string, opts: { extraSounds?: Iterable<strin
   if (ev.eventCount === 0) issues.push({ kind: 'no_events', message: ev.truncated ? `no sound events in the checked part (up to ${uncheckedFromSec} s)` : 'the song produces no sound events' });
   if (ev.missingNote) issues.push({ kind: 'missing_note', message: `${ev.missingNote} synth events have no note (often a "double-quoted" key passed to a helper — use 'single quotes')` });
 
-  const known = await knownSounds(); // null when offline: skip the check rather than guess
+  const known = await knownSounds(opts.packs); // null when offline: skip the check rather than guess
   const isKnown = (n: string) => known!.has(n) || extra.has(n);
   const unknown = known ? ev.sounds.filter((s) => !isKnown(s) && !isKnown(s.split(':')[0])) : [];
   if (unknown.length) issues.push({ kind: 'unknown_sound', message: `unknown sounds: ${unknown.join(', ')}` });

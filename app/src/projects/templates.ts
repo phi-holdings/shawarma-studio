@@ -1,4 +1,7 @@
-/** Starting points offered by the New project dialog. Each one is checked by the server's inspect in a unit test. */
+/**
+ * Starting points offered by the New project dialog. Each one is checked by the check service's inspect in a
+ * unit test, against the hosted sound packs too, so they use only sounds every mode has (no drum-machine banks).
+ */
 export interface SongTemplate { id: string; name: string; description: string; code: string }
 
 export const TEMPLATES: SongTemplate[] = [
@@ -8,7 +11,7 @@ export const TEMPLATES: SongTemplate[] = [
     description: 'A kick and hats at 120 BPM. A blank page with a pulse.',
     code: `setcpm(30) // 120 BPM
 
-s("bd*4, [~ hh]*4").bank("RolandTR909").gain(.8)
+s("bd*4, [~ hh]*4").gain(.8)
 `,
   },
   {
@@ -17,7 +20,7 @@ s("bd*4, [~ hh]*4").bank("RolandTR909").gain(.8)
     description: 'Four-on-the-floor, off-beat bass and minor seventh stabs, in four sections.',
     code: `setcpm(31) // 124 BPM
 
-const drums = s("bd*4, [~ cp]*2, [~ hh]*4, ~ ~ ~ oh").bank("RolandTR909").gain(.85)
+const drums = s("bd*4, [~ cp]*2, [~ hh]*4, ~ ~ ~ oh").gain(.85)
 const bass = note("<[c2 c3]*4 [a1 a2]*4 [f1 f2]*4 [g1 g2]*4>")
   .s("sawtooth").lpf(700).decay(.15).sustain(0).gain(.5)
 const stabs = note("<[c4,eb4,g4,bb4] [a3,c4,eb4,g4] [f3,ab3,c4,eb4] [g3,bb3,d4,f4]>")
@@ -76,10 +79,10 @@ arrange(
   {
     id: 'breakbeat',
     name: 'Breakbeat',
-    description: 'A syncopated 808 break with a rolling bass line.',
+    description: 'A syncopated break with a rolling bass line.',
     code: `setcpm(34) // 136 BPM
 
-const breakbeat = s("bd ~ ~ bd ~ ~ bd ~, ~ ~ sd ~ ~ sd ~ [~ sd], hh*8").bank("RolandTR808").gain(.85)
+const breakbeat = s("bd ~ ~ bd ~ ~ bd ~, ~ ~ sd ~ ~ sd ~ [~ sd], hh*8").gain(.85)
 const bass = note("<[e1 ~ e2 ~ ~ e1 g1 ~] [a1 ~ a2 ~ ~ a1 b1 ~]>")
   .s("square").lpf(500).decay(.2).sustain(0).gain(.45)
 

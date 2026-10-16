@@ -8,3 +8,4 @@ export * from './songmap';
 export * from './runtimeGate';
 export * from './loopGuard';
 export * from './apiErrors';
+export * from './soundPacks';

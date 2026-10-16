@@ -1,14 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CACHE_DIR, SAMPLE_CDN, SAMPLE_MAPS } from './config';
+import { DIRT_SOUNDS, type SoundPackSet } from '@shawarma/shared';
+import { CACHE_DIR, SAMPLE_CDN, SOUND_PACK_SET, sampleMapsFor } from './config';
 
 // superdough synths + noise (from superdough/synth.mjs registerSynthSounds)
 const SYNTHS = ['sine', 'square', 'triangle', 'sawtooth', 'saw', 'tri', 'sqr', 'supersaw', 'pulse', 'white', 'pink', 'brown', 'crackle', 'sbd', 'bytebeat', 'user'];
-// Dirt-Samples aliases registered by strudel.cc prebake
-const DIRT = ['casio', 'crow', 'insect', 'wind', 'jazz', 'metal', 'east', 'space', 'numbers', 'num'];
 
 const FETCH_TIMEOUT_MS = 10_000;
-let cached: Promise<Set<string> | null> | null = null;
+const cached = new Map<SoundPackSet, Promise<Set<string> | null>>();
 
 /** Sound names of one sample map (local cache first, then the CDN), or null if it could not be loaded. */
 async function loadMap(file: string): Promise<string[] | null> {
@@ -31,18 +30,23 @@ async function loadMap(file: string): Promise<string[] | null> {
 }
 
 /**
- * All known sound names, or null when a sample map could not be loaded (offline): an incomplete list
- * would flag real samples as unknown. Only a complete list is cached; null retries next time.
+ * All known sound names of a pack set (default: SOUND_PACKS), or null when a sample map could not be
+ * loaded (offline): an incomplete list would flag real samples as unknown. Only a complete list is
+ * cached; null retries next time. Hosted: no drum machines, wavetables or Dirt-Samples names.
  */
-export function knownSounds(): Promise<Set<string> | null> {
-  cached ??= (async () => {
-    const gm = (await import('@strudel/soundfonts/gm.mjs').catch(() => ({ default: {} }))).default as Record<string, unknown>;
-    const maps = await Promise.all(SAMPLE_MAPS.map(loadMap));
-    if (maps.some((m) => m === null)) {
-      cached = null;
-      return null;
-    }
-    return new Set([...SYNTHS, ...DIRT, ...Object.keys(gm), ...(maps as string[][]).flat()]);
-  })();
-  return cached;
+export function knownSounds(set: SoundPackSet = SOUND_PACK_SET): Promise<Set<string> | null> {
+  let p = cached.get(set);
+  if (!p) {
+    p = (async () => {
+      const gm = (await import('@strudel/soundfonts/gm.mjs').catch(() => ({ default: {} }))).default as Record<string, unknown>;
+      const maps = await Promise.all(sampleMapsFor(set).map(loadMap));
+      if (maps.some((m) => m === null)) {
+        cached.delete(set);
+        return null;
+      }
+      return new Set([...SYNTHS, ...(set === 'all' ? DIRT_SOUNDS : []), ...Object.keys(gm), ...(maps as string[][]).flat()]);
+    })();
+    cached.set(set, p);
+  }
+  return p;
 }

@@ -1,7 +1,6 @@
 import { evalScope } from '@strudel/core';
 import { aliasBank, registerSynthSounds, registerZZFXSounds, samples } from '@strudel/webaudio';
-
-const CDN = 'https://strudel.b-cdn.net';
+import { DRUM_MACHINE_ALIASES, SAMPLE_CDN as CDN, soundPacksFor, type SoundPackSet } from '@shawarma/shared';
 
 export function loadModules() {
   return evalScope(
@@ -14,19 +13,15 @@ export function loadModules() {
   );
 }
 
-export async function prebake() {
+/** Built-in sounds: synths, the GM soundfonts and the sample packs of the set (hosted: only cleanly licensed ones). */
+export async function prebake(packs: SoundPackSet = 'all') {
   await Promise.all([
     registerSynthSounds(),
     registerZZFXSounds(),
     import('@strudel/soundfonts').then(({ registerSoundfonts }) => registerSoundfonts()),
-    samples(`${CDN}/piano.json`, `${CDN}/piano/`, { prebake: true }),
-    samples(`${CDN}/vcsl.json`, `${CDN}/VCSL/`, { prebake: true }),
-    samples(`${CDN}/tidal-drum-machines.json`, `${CDN}/tidal-drum-machines/machines/`, { prebake: true, tag: 'drum-machines' }),
-    samples(`${CDN}/uzu-drumkit.json`, `${CDN}/uzu-drumkit/`, { prebake: true, tag: 'drum-machines' }),
-    samples(`${CDN}/uzu-wavetables.json`, `${CDN}/uzu-wavetables/`, { prebake: true }),
-    samples(`${CDN}/mridangam.json`, `${CDN}/mrid/`, { prebake: true, tag: 'drum-machines' }),
+    ...soundPacksFor(packs).map((p) => samples(`${CDN}/${p.map}`, `${CDN}/${p.folder}/`, { prebake: true, ...(p.tag ? { tag: p.tag } : {}) })),
   ]);
-  aliasBank(`${CDN}/tidal-drum-machines-alias.json`);
+  if (packs === 'all') aliasBank(`${CDN}/${DRUM_MACHINE_ALIASES}`);
 }
 
 /** Options for the live-playback initAudio call (Editor first click and post-render restore must match). */
