@@ -16,8 +16,10 @@ over HTTP only; nothing here imports it.
 
 ## Sounds
 
-The built-in sample packs are played from Strudel's sample CDN (`strudel.b-cdn.net`) and listed with their
-licences in `shared/src/soundPacks.ts`. Locally the editor loads all of them, as strudel.cc does. Hosted
+The built-in sample packs are listed with their licences in `shared/src/soundPacks.ts`. Locally they are played
+from Strudel's sample CDN (`strudel.b-cdn.net`) and the GM instruments from `felixroos.github.io`, and the editor
+loads all of them, as strudel.cc does. A host can serve the packs itself: `/api/me` then names their URL
+(`packsUrl`), which the song runtime gets in its URL (`s=`) and loads every sample map, sample and soundfont from. Hosted
 Shawarma offers only the cleanly licensed ones (Salamander piano CC BY 3.0, VCSL CC0, uzu-drumkit Unlicense,
 mridangam CC BY-SA 4.0, plus the GM instruments) and credits them on `/source`: the app learns the mode from
 `/api/me` and passes it to the song runtime in its URL; the check service reads `SOUND_PACKS=hosted|all` (default

@@ -1,6 +1,6 @@
 import { arrangeInfo, buildSongMap, type EventQuery, type InspectReport, type Issue, type SoundPackSet } from '@shawarma/shared';
 import { FALLBACK_CYCLES, INSPECT_DEADLINE_MS, MAX_CYCLES, MAX_EVENTS } from './sandbox/limits.mjs';
-import { sandboxAnalyse, sandboxQuery } from './sandbox';
+import { SandboxBusyError, SandboxSupersededError, sandboxAnalyse, sandboxQuery, type CallOptions } from './sandbox';
 import { knownSounds } from './sounds';
 
 export { INSPECT_DEADLINE_MS, MAX_CYCLES, MAX_EVENTS };
@@ -10,7 +10,8 @@ const RESERVED = ['piano', 'note', 'sound', 'gain', 'stack', 'arrange', 'silence
 
 /** Check a song. The code itself only ever runs in the sandbox process (see sandbox.ts). */
 /** `packs`: the sound packs to check against (default SOUND_PACKS; tests pass it). */
-export async function inspect(code: string, opts: { extraSounds?: Iterable<string>; packs?: SoundPackSet } = {}): Promise<InspectReport> {
+/** `call`: who asks (fairness; see sandbox.ts). A busy or superseded check throws instead of reporting on the song. */
+export async function inspect(code: string, opts: { extraSounds?: Iterable<string>; packs?: SoundPackSet; call?: CallOptions } = {}): Promise<InspectReport> {
   const extra = new Set(opts.extraSounds ?? []);   // e.g. the project's own samples folder names
   const issues: Issue[] = [];
   for (const name of RESERVED) {
@@ -20,8 +21,9 @@ export async function inspect(code: string, opts: { extraSounds?: Iterable<strin
   }
   let ev;
   try {
-    ev = await sandboxAnalyse(code);
+    ev = await sandboxAnalyse(code, opts.call);
   } catch (e) {
+    if (e instanceof SandboxBusyError || e instanceof SandboxSupersededError) throw e; // says nothing about the song
     issues.unshift({ kind: 'eval_error', message: String((e as Error).message ?? e) });
     return { ok: false, error: issues[0].message, map: null, checkedCycles: 0, issues, sectionEventCounts: [], sounds: [] };
   }
@@ -64,8 +66,8 @@ export async function inspect(code: string, opts: { extraSounds?: Iterable<strin
 const CLIP_REASON = { cycles: `the ${MAX_CYCLES}-cycle query limit`, events: `the ${MAX_EVENTS}-event limit`, time: `the ${INSPECT_DEADLINE_MS} ms time limit`, rows: 'the row limit' } as const;
 
 /** Events between two cycles. A clipped listing says so (reason + how far it goes), never silently. */
-export async function queryEvents(code: string, fromCycle: number, toCycle: number, sound?: string, limit = 200): Promise<EventQuery> {
-  const r = await sandboxQuery(code, fromCycle, toCycle, sound, limit);
+export async function queryEvents(code: string, fromCycle: number, toCycle: number, sound?: string, limit = 200, call: CallOptions = {}): Promise<EventQuery> {
+  const r = await sandboxQuery(code, fromCycle, toCycle, sound, limit, call);
   if (!r.clipped) return { events: r.rows, clipped: false };
   const note = r.reason === 'rows'
     ? `clipped: ${r.totalMatching} events matched, only the first ${limit} (up to cycle ${r.checkedToCycle}) are listed; query a narrower window for the rest`

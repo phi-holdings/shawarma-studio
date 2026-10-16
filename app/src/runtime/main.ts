@@ -3,7 +3,7 @@
 import { CONNECT, HELLO, type Envelope, type RuntimeMessage } from './protocol';
 import { toErrorInfo } from './errors';
 import { EngineError, createEngine } from './engine';
-import { packsFromSearch } from './packs';
+import { packsFromSearch, packsUrlFromSearch } from './packs';
 
 // The app loads this page from the other loopback hostname (localhost <-> 127.0.0.1, same scheme and
 // port) so it runs cross-site, in its own process; elsewhere the app shares this page's origin.
@@ -21,7 +21,7 @@ const engine = createEngine(emit, {
   },
   hideUnlock() { unlock.classList.remove('show'); unlock.onclick = null; },
   visuals: document.getElementById('visuals') as HTMLElement,
-}, packsFromSearch(location.search));
+}, packsFromSearch(location.search), packsUrlFromSearch(location.search));
 
 let queue: Promise<unknown> = Promise.resolve();
 function serve(env: Envelope) {

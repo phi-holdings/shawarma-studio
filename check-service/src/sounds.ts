@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DIRT_SOUNDS, type SoundPackSet } from '@shawarma/shared';
-import { CACHE_DIR, SAMPLE_CDN, SOUND_PACK_SET, sampleMapsFor } from './config';
+import { CACHE_DIR, SAMPLES_BASE, SOUND_PACK_SET, sampleMapsFor } from './config';
 
 // superdough synths + noise (from superdough/synth.mjs registerSynthSounds)
 const SYNTHS = ['sine', 'square', 'triangle', 'sawtooth', 'saw', 'tri', 'sqr', 'supersaw', 'pulse', 'white', 'pink', 'brown', 'crackle', 'sbd', 'bytebeat', 'user'];
@@ -9,14 +9,14 @@ const SYNTHS = ['sine', 'square', 'triangle', 'sawtooth', 'saw', 'tri', 'sqr', '
 const FETCH_TIMEOUT_MS = 10_000;
 const cached = new Map<SoundPackSet, Promise<Set<string> | null>>();
 
-/** Sound names of one sample map (local cache first, then the CDN), or null if it could not be loaded. */
+/** Sound names of one sample map (local cache first, then SAMPLES_BASE), or null if it could not be loaded. */
 async function loadMap(file: string): Promise<string[] | null> {
   const local = path.join(CACHE_DIR, file);
   try {
     return Object.keys(JSON.parse(await fs.readFile(local, 'utf8'))).filter((k) => !k.startsWith('_'));
   } catch {
     try {
-      const res = await fetch(`${SAMPLE_CDN}/${file}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      const res = await fetch(`${SAMPLES_BASE}/${file}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
       if (!res.ok) return null;
       const text = await res.text();
       const names = Object.keys(JSON.parse(text)).filter((k) => !k.startsWith('_'));

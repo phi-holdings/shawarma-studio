@@ -21,7 +21,7 @@ export function useInspect(code: string, delayMs = 600, projectId: string | null
     () => debounceLatest(async (c: string) => {
       const token = guard.current.next();
       try {
-        const r = await inspectCode(c, projectId);
+        const r = await inspectCode(c, projectId, { typing: true });
         if (!guard.current.isCurrent(token)) return;   // a newer request superseded this one
         setResult({ report: r, code: c }); setOffline(false);
       } catch { if (guard.current.isCurrent(token)) setOffline(true); }

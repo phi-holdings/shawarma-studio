@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { runtimeUrl } from './client';
-import { packsFromSearch } from './packs';
+import { packsFromSearch, packsUrlFromSearch } from './packs';
 
 test('the runtime is loaded from the other loopback hostname (another site), same scheme and port', () => {
   expect(runtimeUrl('/runtime.html', 'abc', new URL('http://localhost:5173/')).href).toBe('http://127.0.0.1:5173/runtime.html?n=abc');
@@ -17,6 +17,15 @@ test('hosted mode tells the runtime to load only the hosted sample packs; local 
   expect(packsFromSearch('?n=abc&p=bogus')).toBe('all');
 });
 
+test('self-hosted sound packs: their URL travels to the runtime; none (or not http) means Strudel\'s CDNs', () => {
+  const u = runtimeUrl('/runtime.html', 'abc', new URL('https://shawarma.example/'), 'hosted', 'https://shawarma.example/packs');
+  expect(u.searchParams.get('s')).toBe('https://shawarma.example/packs');
+  expect(packsUrlFromSearch(u.search)).toBe('https://shawarma.example/packs');
+  expect(runtimeUrl('/runtime.html', 'abc', new URL('https://shawarma.example/'), 'hosted').searchParams.has('s')).toBe(false);
+  expect(packsUrlFromSearch('?n=abc')).toBeNull();
+  expect(packsUrlFromSearch(`?s=${encodeURIComponent('javascript:alert(1)')}`)).toBeNull();
+});
+
 test('WebKit (Safari, any iOS browser) is recognised as having no site isolation', async () => {
   const { isWebKitOnly } = await import('./client');
   const ua = {
@@ -31,4 +40,20 @@ test('WebKit (Safari, any iOS browser) is recognised as having no site isolation
   expect(isWebKitOnly(ua.chrome)).toBe(false);
   expect(isWebKitOnly(ua.edge)).toBe(false);
   expect(isWebKitOnly(ua.firefox)).toBe(false);
+});
+
+test('a pre-flight that could not be made is not remembered: the next run of the same code asks again', async () => {
+  const { RuntimeClient } = await import('./client');
+  let calls = 0;
+  let up = false;
+  // only the verdict cache is exercised: no frame is mounted
+  const rc = Object.assign(Object.create(RuntimeClient.prototype), {
+    prechecks: new Map(),
+    precheck: async () => { calls++; if (!up) throw new Error('503'); return { hang: false }; },
+  }) as unknown as { verdict(code: string): Promise<{ hang: boolean; unchecked?: boolean }> };
+  expect(await rc.verdict('s("bd")')).toEqual({ hang: false, unchecked: true });
+  up = true;
+  expect(await rc.verdict('s("bd")')).toEqual({ hang: false });
+  expect(await rc.verdict('s("bd")')).toEqual({ hang: false }); // a real verdict is remembered
+  expect(calls).toBe(2);
 });

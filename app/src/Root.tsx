@@ -37,7 +37,7 @@ export function Root() {
     getMe()
       .then((me) => {
         // hosted Shawarma offers only cleanly licensed sample packs (set before the runtime first loads)
-        setSoundPacks(me?.mode === 'hosted' ? 'hosted' : 'all');
+        setSoundPacks(me?.mode === 'hosted' ? 'hosted' : 'all', me?.mode === 'hosted' ? me.packsUrl ?? null : null);
         setState(me ? { kind: 'app', me } : { kind: 'signed-out' });
       })
       // server down or an older server: the app handles being offline itself

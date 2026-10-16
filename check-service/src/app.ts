@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { inspect, queryEvents } from './inspect';
-import { SandboxMemoryError, SandboxTimeoutError, sandboxPrecheck } from './sandbox';
+import { SandboxBusyError, SandboxMemoryError, SandboxSupersededError, SandboxTimeoutError, sandboxPrecheck, type CallOptions } from './sandbox';
 import { shippedReference } from './reference/search';
 import type { ReferenceKind } from './reference/types';
 import { knownSounds } from './sounds';
@@ -16,6 +16,10 @@ import { knownSounds } from './sounds';
 //   GET  /reference?q=&limit=5&kinds=function,doc            -> {results: [{kind,title,source,content,why,ref}]}
 //   GET  /health                                              -> {ok: true}
 // With CHECK_KEY set, every route but /health needs the same value in the x-check-key header.
+// Fairness (sandbox.ts): x-check-user names the user a check is for (checks are taken from users in turn),
+// x-check-supersede a key whose older waiting checks from that user are dropped. A dropped check answers
+// 409 {code: 'superseded'}, one that could not run in time 503 {code: 'busy'}; neither says anything about
+// the song.
 
 const MAX_BODY_BYTES = 1024 * 1024;
 
@@ -37,6 +41,12 @@ export function createCheckApp(opts: { key?: string } = {}) {
   });
   app.use('*', bodyLimit({ maxSize: MAX_BODY_BYTES, onError: (c) => c.json({ error: 'body too large' }, 413) }));
 
+  const caller = (c: { req: { header: (n: string) => string | undefined } }): CallOptions => {
+    const user = c.req.header('x-check-user')?.slice(0, 200);
+    const supersede = c.req.header('x-check-supersede')?.slice(0, 50);
+    return { ...(user ? { user } : {}), ...(supersede ? { supersede } : {}) };
+  };
+
   const read = async (c: { req: { json: () => Promise<unknown> } }): Promise<Record<string, unknown>> => {
     let b: unknown;
     try { b = await c.req.json(); } catch { throw new BadRequest('body must be JSON'); }
@@ -49,7 +59,7 @@ export function createCheckApp(opts: { key?: string } = {}) {
     const b = await read(c);
     const extra = b.extraSounds;
     if (extra !== undefined && (!Array.isArray(extra) || extra.some((s) => typeof s !== 'string'))) throw new BadRequest('extraSounds must be an array of strings');
-    return c.json(await inspect(b.code as string, { extraSounds: extra as string[] | undefined }));
+    return c.json(await inspect(b.code as string, { extraSounds: extra as string[] | undefined, call: caller(c) }));
   });
 
   app.post('/events', async (c) => {
@@ -57,14 +67,15 @@ export function createCheckApp(opts: { key?: string } = {}) {
     const { fromCycle, toCycle, sound } = b;
     if (typeof fromCycle !== 'number' || typeof toCycle !== 'number' || !Number.isFinite(fromCycle) || !Number.isFinite(toCycle)) throw new BadRequest('fromCycle and toCycle must be finite numbers');
     if (sound !== undefined && typeof sound !== 'string') throw new BadRequest('sound must be a string');
-    return c.json(await queryEvents(b.code as string, fromCycle, toCycle, sound));
+    return c.json(await queryEvents(b.code as string, fromCycle, toCycle, sound, undefined, caller(c)));
   });
 
   app.post('/precheck', async (c) => {
     const b = await read(c);
     try {
-      return c.json({ ok: true, ...(await sandboxPrecheck(b.code as string)) });
+      return c.json({ ok: true, ...(await sandboxPrecheck(b.code as string, caller(c))) });
     } catch (e) {
+      if (e instanceof SandboxBusyError || e instanceof SandboxSupersededError) throw e;
       if (e instanceof SandboxTimeoutError || e instanceof SandboxMemoryError) return c.json({ ok: false, hang: true, error: e.message });
       return c.json({ ok: true, error: (e as Error).message });
     }
@@ -88,6 +99,8 @@ export function createCheckApp(opts: { key?: string } = {}) {
 
   app.onError((e, c) => {
     if (e instanceof BadRequest) return c.json({ error: e.message }, 400);
+    if (e instanceof SandboxSupersededError) return c.json({ error: e.message, code: 'superseded' }, 409);
+    if (e instanceof SandboxBusyError) return c.json({ error: e.message, code: 'busy' }, 503);
     return c.json({ error: e instanceof Error ? e.message : String(e) }, 500);
   });
   app.notFound((c) => c.json({ error: 'not found' }, 404));
