@@ -1,12 +1,15 @@
 // What the page shows before the app: /api/me decides. Local mode (always signed in) and a server that
 // is down go straight to the app, as before. Hosted mode while signed out shows the landing page (the
 // server sends the prerendered one at `/` in production; in dev Vite serves this shell for every path).
-// /privacy, /terms and /source render the public pages here in dev; /billing/success is Polar's return page.
+// /privacy, /terms and /source render the public pages here in dev; /billing/success is Polar's return page,
+// /billing/manage the emails' Manage billing link, /admin the operator's view (hosted, admins only).
 import { useEffect, useState } from 'react';
 import { getMe, SIGNED_OUT_EVENT, type Me } from './api';
 import { App } from './App';
 import { setSoundPacks } from './runtime/client';
 import { BillingSuccess } from './account/BillingSuccess';
+import { ManageBilling } from './account/ManageBilling';
+import { AdminPage } from './admin/AdminPage';
 import { defaultLinks } from './landing/contact';
 import { Landing } from './landing/Landing';
 import { Privacy } from './landing/Privacy';
@@ -16,9 +19,12 @@ import { signInErrorMessage } from './seo/signInError';
 
 type State = { kind: 'loading' } | { kind: 'signed-out' } | { kind: 'app'; me: Me | null };
 
-/** "Continue with Google", coming back to this page (only Polar's return page needs that). */
+/** Pages that come back to themselves after "Continue with Google". */
+const RETURN_PAGES = new Set(['/billing/success', '/billing/manage', '/admin']);
+
+/** "Continue with Google", coming back to this page (Polar's return page, the billing link, the admin view). */
 export function signInHref(pathname: string, search: string): string {
-  return pathname === '/billing/success' ? `/auth/google?return=${encodeURIComponent(pathname + search)}` : '/auth/google';
+  return RETURN_PAGES.has(pathname) ? `/auth/google?return=${encodeURIComponent(pathname + search)}` : '/auth/google';
 }
 
 export function Root() {
@@ -51,5 +57,7 @@ export function Root() {
     return <Landing signInHref={signInHref(path, window.location.search)} {...(error ? { error } : {})} />;
   }
   if (path === '/billing/success') return <BillingSuccess onContinue={() => window.location.assign('/')} />;
+  if (path === '/billing/manage') return <ManageBilling onContinue={() => window.location.assign('/')} />;
+  if (path === '/admin') return <AdminPage />;
   return <App me={state.me} />;
 }

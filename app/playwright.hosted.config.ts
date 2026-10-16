@@ -7,7 +7,7 @@ const freshDb = `node ../../scripts/db-up.mjs && node ../../server/scripts/e2e-d
 const serverEnv = [
   'SHAWARMA_MODE=hosted', `PORT=${serverPort}`, `SHAWARMA_APP_PORT=${appPort}`, `PUBLIC_URL=${publicUrl}`,
   `CHECK_SERVICE_URL=http://127.0.0.1:${checkPort}`, 'SHAWARMA_FAKE_AI=1', 'SHAWARMA_SEARCH=off', `DATABASE_URL=${databaseUrl}`, `SHAWARMA_DATA_DIR=${dataDir}`, `SHAWARMA_CACHE_DIR=${cacheDir}`,
-  'SESSION_SECRET=e2e-hosted-session-secret-0123456789abcdef',
+  'SESSION_SECRET=e2e-hosted-session-secret-0123456789abcdef', 'SHAWARMA_ADMIN_EMAILS=e2e-admin@example.com',
   `GOOGLE_ISSUER=http://127.0.0.1:${oidcPort}`, `GOOGLE_CLIENT_ID=${devClient.id}`, `GOOGLE_CLIENT_SECRET=${devClient.secret}`,
   `POLAR_API_URL=http://127.0.0.1:${polarPort}`, 'POLAR_ACCESS_TOKEN=dev', 'POLAR_SERVER=sandbox', `POLAR_WEBHOOK_SECRET=${devWebhookSecret}`,
   'POLAR_PRODUCT_PRO_MONTHLY=dev_pro_monthly', 'POLAR_PRODUCT_PRO_YEARLY=dev_pro_yearly',
