@@ -42,3 +42,9 @@
 .draft-banner .btn { height: 26px; }
 
 .sidebar-divider { height: 1px; margin: 4px 2px; background: var(--line); }
+
+.trash-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
+.trash-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.trash-what { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
+.trash-what strong { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trash-what .muted { font-size: 12px; }

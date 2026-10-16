@@ -9,3 +9,4 @@ export * from './runtimeGate';
 export * from './loopGuard';
 export * from './apiErrors';
 export * from './soundPacks';
+export * from './legal';

@@ -1,7 +1,7 @@
 // What the page shows before the app: /api/me decides. Local mode (always signed in) and a server that
 // is down go straight to the app, as before. Hosted mode while signed out shows the landing page (the
 // server sends the prerendered one at `/` in production; in dev Vite serves this shell for every path).
-// /privacy, /terms and /source render the public pages here in dev; /billing/success is Polar's return page.
+// /pricing, /privacy, /terms and /source render the public pages here in dev; /billing/success is Polar's return page.
 import { useEffect, useState } from 'react';
 import { getMe, SIGNED_OUT_EVENT, type Me } from './api';
 import { App } from './App';
@@ -9,6 +9,7 @@ import { setSoundPacks } from './runtime/client';
 import { BillingSuccess } from './account/BillingSuccess';
 import { defaultLinks } from './landing/contact';
 import { Landing } from './landing/Landing';
+import { Pricing } from './landing/Pricing';
 import { Privacy } from './landing/Privacy';
 import { Source } from './landing/Source';
 import { Terms } from './landing/Terms';
@@ -24,7 +25,7 @@ export function signInHref(pathname: string, search: string): string {
 export function Root() {
   const path = window.location.pathname;
   const [state, setState] = useState<State>({ kind: 'loading' });
-  const publicPage = path === '/privacy' || path === '/terms' || path === '/source';
+  const publicPage = path === '/privacy' || path === '/terms' || path === '/source' || path === '/pricing';
 
   useEffect(() => {
     if (publicPage) return;
@@ -42,6 +43,7 @@ export function Root() {
     return () => window.removeEventListener(SIGNED_OUT_EVENT, out);
   }, []);
 
+  if (path === '/pricing') return <Pricing links={defaultLinks} />;
   if (path === '/privacy') return <Privacy links={defaultLinks} />;
   if (path === '/terms') return <Terms links={defaultLinks} />;
   if (path === '/source') return <Source links={defaultLinks} />;

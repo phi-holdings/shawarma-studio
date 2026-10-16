@@ -117,7 +117,7 @@ test('Duplicate copies a project; Delete moves it to the trash and opens another
   // delete asks first; Cancel keeps it
   await menu(page, name, 'Delete…');
   const confirm = page.getByRole('dialog', { name: 'Delete project' });
-  await expect(confirm).toContainText('moves to the trash');
+  await expect(confirm).toContainText(/moves to the trash/i);
   await confirm.getByRole('button', { name: 'Cancel' }).click();
   await expect(entry(page, name)).toBeVisible();
 
@@ -132,6 +132,16 @@ test('Duplicate copies a project; Delete moves it to the trash and opens another
   const again = (await (await request.post('/api/projects', { data: { name, code: 's("hh")' } })).json()) as { id: string };
   expect(again.id).toBe(created.id);
   expect(((await (await request.get(`/api/projects/${again.id}`)).json()) as { code: string }).code).toBe('s("hh")');
+
+  // the Trash brings the deleted one back, under a free name (local mode keeps the trash, no countdown)
+  await page.getByRole('button', { name: 'Trash' }).click();
+  const trash = page.getByRole('dialog', { name: 'Trash' });
+  await expect(trash).toContainText('until you delete them forever');
+  await trash.getByRole('button', { name: `Restore ${name}` }).click();
+  await expect(trash.getByRole('button', { name: `Restore ${name}` })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(entry(page, `${name} 2`)).toBeVisible();
+  expect(((await (await request.get(`/api/projects/${created.id}-2`)).json()) as { code: string }).code).toBe('s("cp*2")');
 });
 
 test('unsaved edits survive a reload and are offered back', async ({ page, request }) => {

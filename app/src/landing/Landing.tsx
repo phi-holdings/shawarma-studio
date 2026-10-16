@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { Mark } from '../brand/Mark';
 import { Footer } from './DocPage';
 import { defaultLinks, type LandingLinks } from './contact';
+import { DEFAULT_PRICES, TRIAL_DAYS, usd } from './proPrices';
 import './landing.css';
 
 export interface LandingProps {
@@ -35,6 +36,7 @@ export function Landing({ signInHref, error, links = defaultLinks }: LandingProp
       <header className="ld-nav">
         <a className="ld-brand" href={links.home}><Mark size={26} />Shawarma</a>
         <nav aria-label="Account">
+          <a className="ld-navlink" href={links.pricing}>Pricing</a>
           <a className="ld-pill ld-pill-line" href={signInHref}>Sign in</a>
           <a className="ld-pill" href={signInHref}>Get started</a>
         </nav>
@@ -54,8 +56,9 @@ export function Landing({ signInHref, error, links = defaultLinks }: LandingProp
                 <GoogleMark />
                 Continue with Google
               </a>
-              <span className="ld-free">The editor is free. The AI comes with Pro: 7 days free, then $12 a month or $120 a year.</span>
+              <span className="ld-free">The editor is free. The AI comes with Pro: {TRIAL_DAYS} days free, then <span data-price="month">{usd(DEFAULT_PRICES.month)}</span> a month or <span data-price="year">{usd(DEFAULT_PRICES.year)}</span> a year. <a href={links.pricing}>Pricing</a></span>
             </div>
+            <p className="ld-agree">By continuing you agree to the <a href={links.terms}>Terms</a> and the <a href={links.privacy}>Privacy</a> page.</p>
           </div>
         </section>
 

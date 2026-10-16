@@ -20,6 +20,12 @@ export interface BillingStatus {
   message?: string;
   cancelAtPeriodEnd: boolean;
   periodEnd: string | null;
+  /** Monthly or yearly Pro, when known. */
+  interval?: 'month' | 'year' | null;
+  /** Polar status past_due: a renewal payment failed; Pro is kept until then. */
+  graceEndsAt?: string | null;
+  /** Pro's prices in whole US dollars, before VAT (the server's PRICES). */
+  prices?: { month: number; year: number; currency: string };
 }
 
 /** The label of the action that starts Pro's trial (checkout). */

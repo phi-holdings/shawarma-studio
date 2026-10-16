@@ -27,3 +27,9 @@ export const listExports = (id: string) => call<ExportEntry[]>(`${base(id)}/expo
 export const deleteExport = (id: string, name: string) => call<{ ok: true }>(`${base(id)}/export-files/${encodeURIComponent(name)}`, { method: 'DELETE' });
 /** URL the server streams an export file from (for an <audio> element). */
 export const exportFileUrl = (id: string, file: string) => `${base(id)}/export-files/${encodeURIComponent(file)}`;
+
+/** A deleted project (server/src/http/trash.ts). `daysLeft`/`purgeAt` are null where the trash is kept (local mode). */
+export interface TrashedProject { uuid: string; slug: string; name: string; trashedAt: string; bytes: number; purgeAt: string | null; daysLeft: number | null }
+export const listTrash = () => call<{ purgeDays: number | null; projects: TrashedProject[] }>('/api/trash');
+export const restoreProject = (uuid: string) => call<ProjectSummary>(`/api/trash/${encodeURIComponent(uuid)}/restore`, send('POST'));
+export const deleteForever = (uuid: string) => call<{ ok: true }>(`/api/trash/${encodeURIComponent(uuid)}`, { method: 'DELETE' });

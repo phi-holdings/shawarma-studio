@@ -43,3 +43,19 @@ test('the server-served build refuses null-origin requests that are not the runt
   // production: the Vite dev port is not an allowed origin
   expect((await request.get(`${base}/api/projects`, { headers: { origin: 'http://localhost:5173' } })).status()).toBe(403);
 });
+
+test('the prerendered public pages fit a 390px phone, and /pricing gets its prices from the server', async ({ browser }) => {
+  const page = await (await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })).newPage();
+  for (const p of ['/pricing', '/terms', '/privacy', '/source']) {
+    const res = await page.goto(`${base}${p}`);
+    expect(res?.status(), p).toBe(200);
+    expect(await res!.text(), p).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1
+      && Array.from(document.querySelectorAll('.landing *')).every((e) => e.getBoundingClientRect().right <= window.innerWidth + 1));
+    expect(fits, p).toBe(true);
+  }
+  await page.goto(`${base}/pricing`);
+  await expect(page.locator('[data-price="year"]')).toHaveText('$120');
+  expect((await page.request.get(`${base}/api/pricing`)).status()).toBe(200);
+});

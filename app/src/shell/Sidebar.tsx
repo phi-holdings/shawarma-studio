@@ -31,6 +31,8 @@ export function Sidebar(props: ProjectActions & {
   projects: ProjectSummary[]; projectId: string | null; disabled?: boolean; onSettings(): void; onCollapse(): void;
   /** Hosted mode: the account menu, above Settings. */
   account?: ReactNode;
+  /** Opens the Trash (deleted projects). */
+  onTrash?(): void;
 }) {
   const [query, setQuery] = useState('');
   const [menu, setMenu] = useState<string | null>(null);
@@ -82,7 +84,9 @@ export function Sidebar(props: ProjectActions & {
       </ul>
       <div className="sidebar-foot">
         {props.account}
+        {props.onTrash && <button className="btn btn-ghost settings-link" onClick={props.onTrash} disabled={props.disabled}><span aria-hidden>⌫</span>Trash</button>}
         <button className="btn btn-ghost settings-link" aria-label="Settings" onClick={props.onSettings}><span aria-hidden>⚙</span>Settings</button>
+        <a className="sidebar-credit" href="/source" target="_blank" rel="noopener">Built on Strudel (AGPL-3.0)</a>
       </div>
     </nav>
   );

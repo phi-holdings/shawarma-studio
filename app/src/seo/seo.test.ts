@@ -51,7 +51,7 @@ describe.each(PUBLIC_ROUTES)('prerendered $path', (route) => {
   });
 });
 
-test('JSON-LD on the landing page only: the app (free tier, no paid price) and phi holdings', () => {
+test('JSON-LD on the landing page only: the app (Free and Pro prices) and phi holdings', () => {
   const [landing, ...docs] = PUBLIC_ROUTES.map((r) => renderPage(template, r, BASE));
   for (const d of docs) expect(d).not.toContain('application/ld+json');
   const json = landing.match(/<script type="application\/ld\+json">(.+?)<\/script>/)?.[1];
@@ -60,8 +60,7 @@ test('JSON-LD on the landing page only: the app (free tier, no paid price) and p
   const org = graph.find((n: { '@type': string }) => n['@type'] === 'Organization');
   expect(appLd).toMatchObject({ name: 'Shawarma REPL', applicationCategory: 'MusicApplication', operatingSystem: 'Web', url: `${BASE}/` });
   expect(appLd.description).toBeTruthy();
-  expect(appLd.offers).toMatchObject({ '@type': 'Offer', price: '0' });
-  expect(Array.isArray(appLd.offers)).toBe(false);
+  expect(appLd.offers.map((o: { name: string; price: string }) => [o.name, o.price])).toEqual([['Free', '0'], ['Pro monthly', '12'], ['Pro yearly', '120']]);
   expect(org).toMatchObject({ name: 'phi holdings', url: 'https://phi.holdings' });
   expect(landing).toContain('href="/auth/google"');
 });
@@ -78,7 +77,7 @@ test('robots.txt allows exactly the public pages and disallows the rest', () => 
 test('sitemap.xml lists exactly the public pages with lastmod', () => {
   const lastmods = Object.fromEntries(PUBLIC_ROUTES.map((r) => [r.path, '2026-10-13']));
   const xml = sitemapXml(BASE, lastmods);
-  expect([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])).toEqual([`${BASE}/`, `${BASE}/privacy`, `${BASE}/terms`, `${BASE}/source`]);
+  expect([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])).toEqual([`${BASE}/`, `${BASE}/pricing`, `${BASE}/privacy`, `${BASE}/terms`, `${BASE}/source`]);
   expect([...xml.matchAll(/<lastmod>2026-10-13<\/lastmod>/g)]).toHaveLength(PUBLIC_ROUTES.length);
   expect(() => sitemapXml(BASE, {})).toThrow(/lastmod/);
 });

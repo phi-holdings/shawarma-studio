@@ -71,6 +71,23 @@ function prerenderPublicSite(): Plugin {
   };
 }
 
+/**
+ * The studio commit this build comes from (VITE_STUDIO_COMMIT, else `git rev-parse HEAD` in studio/), and
+ * whether the tree had uncommitted changes: the /source page links that exact commit, and Help & feedback
+ * sends it along. Empty outside git.
+ */
+function studioCommit(): void {
+  const studioDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const git = (...args: string[]) => execFileSync('git', ['-C', studioDir, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  if (process.env.VITE_STUDIO_COMMIT === undefined) {
+    try {
+      process.env.VITE_STUDIO_COMMIT = git('rev-parse', 'HEAD');
+      process.env.VITE_STUDIO_DIRTY = git('status', '--porcelain', '--untracked-files=no') ? '1' : '';
+    } catch { process.env.VITE_STUDIO_COMMIT = ''; }
+  }
+}
+studioCommit();
+
 export default defineConfig({
   plugins: [react(), runtimeFrame(), previewPublicSite(), prerenderPublicSite()],
   server: { port: 5173, host: '127.0.0.1', fs: { allow: [searchForWorkspaceRoot(process.cwd()), depsRoot] }, proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
