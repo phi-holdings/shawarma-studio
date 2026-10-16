@@ -71,6 +71,7 @@ export function AccountMenu(props: {
             </button>
           </div>
           <nav className="account-links" aria-label="About Shawarma">
+            {props.me.admin && <a href="/admin">Admin</a>}
             <a href="/source" target="_blank" rel="noopener">Source code</a>
             <a href="/privacy" target="_blank" rel="noopener">Privacy</a>
             <a href="/terms" target="_blank" rel="noopener">Terms</a>

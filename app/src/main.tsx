@@ -19,3 +19,5 @@ applyTheme();
 editorPrefs.subscribe(applyTheme);
 createRoot(document.getElementById('root')!).render(<Root />);
 installTooltips();
+// hosted builds with VITE_SENTRY_DSN report errors (src/monitoring.ts); nothing is loaded otherwise
+void import('./monitoring').then((m) => m.initMonitoring()).catch(() => {});

@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import { inlineModuleImports, runtimeOriginGate } from './src/dev/runtimeCors';
 import { PUBLIC_ROUTES } from './src/seo/routes';
+import { umamiTag, withAnalytics } from './src/seo/analytics';
 
 const sharedSrc = `/@fs${path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../shared/src')}/`;
 const serverPort = Number(process.env.SHAWARMA_SERVER_PORT ?? 8787);
@@ -71,8 +72,19 @@ function prerenderPublicSite(): Plugin {
   };
 }
 
+/** Umami's script in the app shell and the public pages when VITE_UMAMI_WEBSITE_ID and VITE_UMAMI_SRC are set (src/seo/analytics.ts). */
+function analytics(): Plugin {
+  let tag = '';
+  return {
+    name: 'shawarma-analytics',
+    // config.env has the VITE_ settings from the environment and .env files
+    configResolved: (config) => { tag = umamiTag(config.env.VITE_UMAMI_WEBSITE_ID, config.env.VITE_UMAMI_SRC); },
+    transformIndexHtml: { order: 'post', handler: (html, ctx) => withAnalytics(html, ctx.filename, tag) },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), runtimeFrame(), previewPublicSite(), prerenderPublicSite()],
+  plugins: [react(), runtimeFrame(), previewPublicSite(), prerenderPublicSite(), analytics()],
   server: { port: 5173, host: '127.0.0.1', fs: { allow: [searchForWorkspaceRoot(process.cwd()), depsRoot] }, proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
   preview: { proxy: { '/api': `http://127.0.0.1:${serverPort}`, '/auth': `http://127.0.0.1:${serverPort}` } },
   // scan both pages up front so the runtime's deps don't trigger a mid-session re-optimise + reload

@@ -46,7 +46,7 @@ export interface MeBilling {
 /** GET /api/me: who is signed in; hosted mode adds the plan and allowance. */
 export type Me =
   | { mode: 'local'; user: { id: string; email: string; name: string | null; avatarUrl: string | null } }
-  | { mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean; storageBytes: number } };
+  | { mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean; storageBytes: number }; admin?: boolean };
 
 /** The signed-in person, or null when nobody is (hosted mode, signed out). Throws OfflineError when the server is down. */
 export async function getMe(): Promise<Me | null> {
