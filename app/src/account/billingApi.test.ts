@@ -1,8 +1,9 @@
 import { expect, test } from 'vitest';
-import { formatDay, waitForPro, type BillingStatus } from './billingApi';
+import { formatDay, trialAction, waitForPro, type BillingStatus } from './billingApi';
 
-const status = (plan: 'free' | 'pro'): BillingStatus => ({
-  plan, status: plan === 'pro' ? 'active' : 'none', ok: true, usedPercent: 0, resetsAt: '2026-11-01T00:00:00.000Z',
+const status = (plan: 'free' | 'pro', trial = false): BillingStatus => ({
+  plan, status: plan === 'pro' ? (trial ? 'trialing' : 'active') : 'none', ok: plan === 'pro', usedPercent: 0, resetsAt: '2026-11-01T00:00:00.000Z',
+  trial, trialEndsAt: trial ? '2026-10-23T00:00:00.000Z' : null, trialDays: 7,
   canUpgrade: plan === 'free', cancelAtPeriodEnd: false, periodEnd: null,
 });
 
@@ -18,6 +19,14 @@ test('waitForPro resolves once the plan shows Pro, retrying through errors', asy
   const r = await waitForPro({ ...c, intervalMs: 1000, getStatus: async () => { const a = answers[calls++]; if (a instanceof Error) throw a; return a; } });
   expect(r).toBe('pro');
   expect(calls).toBe(4);
+});
+
+test('waitForPro tells a started trial apart from a paid plan', async () => {
+  const c = clock();
+  const answers = [status('free'), status('pro', true)];
+  let calls = 0;
+  expect(await waitForPro({ ...c, getStatus: async () => answers[calls++] })).toBe('trial');
+  expect(trialAction(7)).toBe('Start 7-day free trial');
 });
 
 test('waitForPro gives up after the timeout', async () => {

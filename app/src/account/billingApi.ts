@@ -8,11 +8,22 @@ export interface BillingStatus {
   ok: boolean;
   usedPercent: number;
   resetsAt: string;
+  /** On Pro's free trial (Polar status trialing): the allowance shown is the trial's. */
+  trial: boolean;
+  trialEndsAt: string | null;
+  /** Length of Pro's trial in days (the server's TRIAL.days). */
+  trialDays: number;
+  /** Free: the action is "Start N-day free trial" (the Upgrade flow; Polar adds the trial). */
   canUpgrade: boolean;
+  /** Why chat is refused when ok is false: pro_required (Free has no AI) or allowance. */
+  code?: 'pro_required' | 'allowance';
   message?: string;
   cancelAtPeriodEnd: boolean;
   periodEnd: string | null;
 }
+
+/** The label of the action that starts Pro's trial (checkout). */
+export const trialAction = (days: number) => `Start ${days}-day free trial`;
 
 export type BillingInterval = 'month' | 'year';
 
@@ -44,10 +55,10 @@ export interface WaitOptions {
 }
 
 /**
- * Polls the status until the plan shows Pro (the webhook has landed) or `timeoutMs` passes.
- * Network blips while polling are retried, not reported.
+ * Polls the status until the plan shows Pro (the webhook has landed) or `timeoutMs` passes: 'trial'
+ * when it is Pro's free trial. Network blips while polling are retried, not reported.
  */
-export async function waitForPro(opts: WaitOptions = {}): Promise<'pro' | 'timeout' | 'aborted'> {
+export async function waitForPro(opts: WaitOptions = {}): Promise<'pro' | 'trial' | 'timeout' | 'aborted'> {
   const getStatus = opts.getStatus ?? getBillingStatus;
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const now = opts.now ?? Date.now;
@@ -55,7 +66,8 @@ export async function waitForPro(opts: WaitOptions = {}): Promise<'pro' | 'timeo
   for (;;) {
     if (opts.signal?.aborted) return 'aborted';
     try {
-      if ((await getStatus()).plan === 'pro') return 'pro';
+      const s = await getStatus();
+      if (s.plan === 'pro') return s.trial ? 'trial' : 'pro';
     } catch { /* try again */ }
     if (now() >= deadline) return 'timeout';
     await sleep(opts.intervalMs ?? 1500);

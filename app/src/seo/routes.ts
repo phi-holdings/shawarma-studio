@@ -26,7 +26,7 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     file: 'site/index.html',
     title: 'Shawarma REPL: write songs in code, change them by asking',
     description:
-      'Live-code music with Strudel. Your song loops while you type; ask Shawarma, the assistant, for a change in plain words and hear it before you keep it. Free to start.',
+      'Live-code music with Strudel. Your song loops while you type; ask Shawarma, the assistant, for a change in plain words and hear it before you keep it. Free editor; the assistant comes with Pro, 7 days free.',
     sources: ['src/landing/Landing.tsx', 'src/landing/figures.ts', ...shared],
   },
   {

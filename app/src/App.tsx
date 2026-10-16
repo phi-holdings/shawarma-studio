@@ -31,7 +31,7 @@ import { strudelLink } from './projects/share';
 import { AccountMenu } from './account/AccountMenu';
 import { AllowanceMeter } from './account/AllowanceMeter';
 import { UpgradeDialog } from './account/UpgradeDialog';
-import { getBillingStatus, openPortal, type BillingStatus } from './account/billingApi';
+import { getBillingStatus, openPortal, trialAction, type BillingStatus } from './account/billingApi';
 
 const SCRATCH = 's("bd sd")\n';
 
@@ -42,6 +42,7 @@ export function App(props: { me?: Me | null } = {}) {
   const refreshBilling = useCallback(() => { if (hostedMe) getBillingStatus().then(setBilling).catch(() => {}); }, [hostedMe]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const plan = billing?.plan ?? hostedMe?.plan ?? 'free';
+  const trialDays = billing?.trialDays ?? hostedMe?.billing.trialDays ?? 7;
   const manageBilling = async () => { const { url } = await openPortal(); window.location.assign(url); };
   const doSignOut = async () => { await signOut(); window.location.assign('/'); };
   const editor = useRef<EditorHandle>(null);
@@ -394,7 +395,7 @@ export function App(props: { me?: Me | null } = {}) {
           onOpenSettings={() => setSettingsOpen(true)}
           onKeyMissing={() => void loadSettings()}
           pickedSound={pickedSound}
-          {...(hostedMe ? { hosted: { thinkDeeper: plan === 'pro' }, onUpgrade: () => setUpgradeOpen(true), onTurnEnd: refreshBilling } : {})}
+          {...(hostedMe ? { hosted: { thinkDeeper: plan === 'pro' && !billing?.trial, trialDays }, onUpgrade: () => setUpgradeOpen(true), onTurnEnd: refreshBilling } : {})}
         />
       </main>
       <Splitter width={workWidth} min={460} max={Math.max(480, window.innerWidth - 640)} onWidth={setWorkWidth} />
@@ -428,16 +429,18 @@ export function App(props: { me?: Me | null } = {}) {
         hostedPanel={hostedMe ? (
           <section className="modal-section settings-plan">
             <h3>Your plan</h3>
-            <p className="muted">Shawarma's AI is included in your plan. You're on {plan === 'pro' ? 'Pro' : 'Free'}{billing?.plan === 'pro' && billing.periodEnd ? `; it ${billing.cancelAtPeriodEnd ? 'ends' : 'renews'} on ${new Date(billing.periodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' })}` : ''}.</p>
+            <p className="muted">{plan === 'free'
+              ? "You're on Free: the editor, sounds and export, 3 projects and 200 MB of files. Shawarma's AI comes with Pro."
+              : `You're on ${billing?.trial ? "Pro's free trial" : 'Pro'}${billing?.periodEnd ? `; it ${billing.cancelAtPeriodEnd ? 'ends' : billing.trial ? 'becomes paid Pro' : 'renews'} on ${new Date(billing.periodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' })}` : ''}.`}</p>
             {billing && <AllowanceMeter status={billing} onUpgrade={() => { setSettingsOpen(false); setUpgradeOpen(true); }} />}
             <div className="row">
               {plan === 'free'
-                ? <button className="btn btn-primary" onClick={() => { setSettingsOpen(false); setUpgradeOpen(true); }}>Upgrade to Pro</button>
+                ? <button className="btn btn-primary" onClick={() => { setSettingsOpen(false); setUpgradeOpen(true); }}>{trialAction(trialDays)}</button>
                 : <button className="btn btn-outline" onClick={() => void manageBilling().catch((e) => setNotice((e as Error).message))}>Manage billing</button>}
             </div>
           </section>
         ) : undefined} />}
-      {upgradeOpen && <UpgradeDialog onClose={() => setUpgradeOpen(false)} />}
+      {upgradeOpen && <UpgradeDialog trialDays={trialDays} onClose={() => setUpgradeOpen(false)} />}
     </div>
   );
 }

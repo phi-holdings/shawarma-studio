@@ -1,6 +1,7 @@
 // Hosted Shawarma end to end, against the local fakes: landing -> Continue with Google (fake provider) ->
-// app -> new project -> chat (fake AI) -> allowance used up -> Upgrade -> fake Polar "Pay (test)" ->
-// back on Pro -> chat works again -> Manage billing opens the portal -> sign out -> landing.
+// app -> new project -> chat refused on Free with "Start 7-day free trial" -> fake Polar "Start trial
+// (test)" -> on the trial, chat works (fake AI) -> the trial's allowance used up -> Manage billing ->
+// "End trial now" in the fake portal -> Pro's allowance and Think deeper -> sign out -> landing.
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,7 +20,7 @@ async function seedUsage(email: string, usd: number) {
   try {
     await c.query(
       `insert into usage_events (user_id, model, input_tokens, output_tokens, cost_usd, created_at)
-       select id, 'claude-opus-5-5', 1000, 100, $2, now() - interval '1 minute' from users where email = $1`,
+       select id, 'claude-opus-5-5', 1000, 100, $2, now() from users where email = $1`,
       [email, usd],
     );
   } finally { await c.end(); }
@@ -30,7 +31,7 @@ const send = async (page: Page, text: string) => {
   await page.getByRole('button', { name: /Send/ }).click();
 };
 
-test('sign in, chat, hit the allowance, upgrade through Polar, chat again, sign out', async ({ page }) => {
+test('sign in, chat refused on Free, start the trial, use up its AI, end the trial, Pro, sign out', async ({ page }) => {
   const email = `e2e-${Date.now()}@example.com`;
 
   // signed out: the landing page
@@ -77,48 +78,68 @@ test('sign in, chat, hit the allowance, upgrade through Polar, chat again, sign 
   for (const n of ['RolandTR909_bd', 'RolandTR909_sd', 'casio']) expect(issues[0].message).toContain(n);
   await page.getByRole('tab', { name: 'Code' }).click();
 
-  // chat with the (fake) assistant; no dollar amounts in hosted mode; Think deeper is Pro only
+  // Free has no AI: chat is refused with the trial action, and Think deeper is locked
+  await expect(page.locator('label.toggle', { hasText: 'Think deeper' }).locator('input')).toBeDisabled();
+  await send(page, 'add a clap');
+  const refusal = page.locator('.msg.err', { hasText: "Shawarma's AI comes with Pro. Start a 7-day free trial to use it" });
+  await expect(refusal).toBeVisible();
+  await account.click();
+  await expect(page.getByText('No AI on Free')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Account' }).getByRole('button', { name: 'Start 7-day free trial' })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // Start 7-day free trial -> the fake Polar checkout (card kept, $0 today) -> back on Pro's trial
+  await refusal.getByRole('button', { name: 'Start 7-day free trial' }).click();
+  const upgrade = page.getByRole('dialog', { name: 'Start 7-day free trial' });
+  await expect(upgrade.getByText(/charged when the trial ends/)).toBeVisible();
+  await upgrade.getByRole('button', { name: 'Continue to checkout' }).click();
+  await expect(page).toHaveURL(new RegExp(`^http://127\\.0\\.0\\.1:${polarPort}/checkout/`));
+  await expect(page.getByText('7-day free trial: $0.00 today')).toBeVisible();
+  await page.getByRole('button', { name: 'Start trial (test)' }).click();
+  await expect(page).toHaveURL(/\/billing\/success\?checkout_id=/);
+  await expect(page.getByRole('heading', { name: 'Your free trial has started.' })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Back to your songs' }).click();
+
+  // on the trial: chat works (no dollar amounts in hosted mode); Think deeper waits for paid Pro
+  const proAccount = page.getByRole('button', { name: /^Account: Hosted Tester, Pro plan$/ });
+  await expect(proAccount).toBeVisible();
+  await expect(proAccount).toContainText('Pro trial');
+  await page.getByRole('button', { name: 'Hosted song', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 2, name: /Hosted song/ })).toBeVisible();
   await expect(page.locator('label.toggle', { hasText: 'Think deeper' }).locator('input')).toBeDisabled();
   await send(page, 'add a clap');
   await expect(page.getByText('Added a clap after the snare.')).toBeVisible();
   await expect(page.locator('.chat-cost')).toHaveCount(0);
 
-  // the allowance runs out
-  await seedUsage(email, 5);
+  // the trial's AI runs out
+  await seedUsage(email, 1);
   await send(page, 'more');
-  const refusal = page.locator('.msg.err', { hasText: "You've used this month's AI allowance. Upgrade to Pro, or it resets on" });
-  await expect(refusal).toBeVisible();
-  await account.click();
-  await expect(page.getByText("100% of this month's AI used")).toBeVisible();
-  await page.keyboard.press('Escape');
+  await expect(page.locator('.msg.err', { hasText: "You've used the AI that comes with the free trial. Pro's full monthly allowance starts when your trial ends on" })).toBeVisible();
+  await proAccount.click();
+  await expect(page.getByText("100% of the trial's AI used")).toBeVisible();
 
-  // Upgrade -> the fake Polar checkout -> back to Shawarma on Pro
-  await refusal.getByRole('button', { name: 'Upgrade to Pro' }).click();
-  const upgrade = page.getByRole('dialog', { name: 'Upgrade to Pro' });
-  await upgrade.getByRole('button', { name: 'Continue to payment' }).click();
-  await expect(page).toHaveURL(new RegExp(`^http://127\\.0\\.0\\.1:${polarPort}/checkout/`));
-  await page.getByRole('button', { name: 'Pay (test)' }).click();
-  await expect(page).toHaveURL(/\/billing\/success\?checkout_id=/);
-  await expect(page.getByRole('heading', { name: "You're on Pro." })).toBeVisible({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'Back to your songs' }).click();
+  // Manage billing -> the fake portal -> end the trial now (charged, active) -> back to Shawarma
+  await page.getByRole('button', { name: 'Manage billing' }).click();
+  await expect(page).toHaveURL(new RegExp(`^http://127\\.0\\.0\\.1:${polarPort}/portal/`));
+  await expect(page.getByText(/Shawarma Pro · trialing/)).toBeVisible();
+  await page.getByRole('button', { name: 'End trial now (charge)' }).click();
+  await expect(page.getByText(/Shawarma Pro · active, renews/)).toBeVisible();
+  await page.getByRole('link', { name: 'Back to Shawarma' }).click();
 
-  // Pro: a fresh allowance and Think deeper
-  await expect(page.getByRole('button', { name: /^Account: Hosted Tester, Pro plan$/ })).toBeVisible();
+  // paid Pro: a fresh monthly allowance and Think deeper
+  await expect(proAccount).toBeVisible();
+  await expect(proAccount).not.toContainText('trial');
   await page.getByRole('button', { name: 'Hosted song', exact: true }).click();
   await expect(page.getByRole('heading', { level: 2, name: /Hosted song/ })).toBeVisible();
   await expect(page.locator('label.toggle', { hasText: 'Think deeper' }).locator('input')).toBeEnabled();
   await send(page, 'add a clap again');
-  await expect(page.getByText('Added a clap after the snare.').last()).toBeVisible();
   await expect(page.getByText('Added a clap after the snare.')).toHaveCount(2);
   await expect(page.locator('.msg.err')).toHaveCount(0);
+  await proAccount.click();
+  await expect(page.getByText(/^\d+% of this month's AI used$/)).toBeVisible();
+  await page.keyboard.press('Escape');
 
-  // Manage billing opens the (fake) customer portal
-  await page.getByRole('button', { name: /^Account: Hosted Tester, Pro plan$/ }).click();
-  await page.getByRole('button', { name: 'Manage billing' }).click();
-  await expect(page).toHaveURL(new RegExp(`^http://127\\.0\\.0\\.1:${polarPort}/portal/`));
-  await expect(page.getByText(/Shawarma Pro/).first()).toBeVisible();
-
-  // back, sign out: the landing page again, and the API refuses the old session
+  // sign out: the landing page again, and the API refuses the old session
   await page.goto('/');
   await page.getByRole('button', { name: /^Account: Hosted Tester, Pro plan$/ }).click();
   // the AGPL source offer, privacy and terms are one click away for signed-in people too

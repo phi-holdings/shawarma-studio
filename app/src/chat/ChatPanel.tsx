@@ -9,6 +9,7 @@ import { cancelReview, dropReview, isReviewing, setCodeMinimal, startReview } fr
 import { cardStatuses, fromStoredChat, quickActions, settleProposal, upsertLive, usd, withSound, errorItem, type Item } from './chatModel';
 import { DiffCard, type CardFailure } from './DiffCard';
 import { CheckFailedError, checkProblem } from './saveCheck';
+import { trialAction } from '../account/billingApi';
 import './chat.css';
 
 const NO_KEY_MESSAGE = 'Add your Anthropic API key in Settings'; // server's 400 when no key is stored
@@ -48,9 +49,9 @@ export function ChatPanel(props: {
   pickedSound?: { code: string; id: number } | null;
   /**
    * Hosted mode: no dollar amounts (the account menu shows the allowance), Think deeper only on plans
-   * that include it, and Upgrade on refusals that offer it.
+   * that include it (not during Pro's trial), and "Start N-day free trial" on refusals that offer it.
    */
-  hosted?: { thinkDeeper: boolean };
+  hosted?: { thinkDeeper: boolean; trialDays: number };
   onUpgrade?(): void;
   /** After each chat turn (hosted: refresh the allowance). */
   onTurnEnd?(): void;
@@ -195,7 +196,7 @@ export function ChatPanel(props: {
         setItems((x) => x.filter((it, i) => !(i === x.length - 1 && it.kind === 'assistant' && !it.text && !it.tools.length)));
       } else {
         if ((err as Error).message === NO_KEY_MESSAGE) props.onKeyMissing();
-        // hosted refusals (allowance, Think deeper on Free, the global cap) are already plain sentences
+        // hosted refusals (no AI on Free, allowance, Think deeper, the global and trial caps) are already plain sentences
         if (err instanceof ServerError && err.code && err.status !== 500) {
           const upgrade = err.canUpgrade && Boolean(props.onUpgrade);
           setItems((x) => [...x, { kind: 'error', text: err.message, ...(upgrade ? { upgrade: true } : {}) }]);
@@ -411,7 +412,7 @@ export function ChatPanel(props: {
           : <div key={k} className="msg err" role="alert">
               <span>{it.text}</span>
               {it.auth && <button className="btn btn-outline" onClick={props.onOpenSettings}>Open Settings</button>}
-              {it.upgrade && props.onUpgrade && <button className="btn btn-outline" onClick={props.onUpgrade}>Upgrade to Pro</button>}
+              {it.upgrade && props.onUpgrade && <button className="btn btn-outline" onClick={props.onUpgrade}>{trialAction(props.hosted?.trialDays ?? 7)}</button>}
             </div>,
         )}
       </div>
@@ -435,7 +436,7 @@ export function ChatPanel(props: {
               {useSel ? (hasSel ? sel.label : 'Select some code') : 'Edit selection only'}
             </label>
             <label className={`toggle${deep ? ' on' : ''}${deepLocked ? ' locked' : ''}`}
-              title={deepLocked ? 'Think deeper is part of Pro' : 'Takes longer and costs more, for bigger rewrites'}>
+              title={deepLocked ? 'Think deeper is part of Pro (after the trial)' : 'Takes longer and costs more, for bigger rewrites'}>
               <input type="checkbox" checked={deep && !deepLocked} disabled={deepLocked} onChange={(e) => setDeep(e.target.checked)} />
               Think deeper
             </label>

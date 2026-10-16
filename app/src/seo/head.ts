@@ -28,7 +28,7 @@ export function landingJsonLd(publicUrl: string, description: string): object {
         image: absoluteUrl(publicUrl, OG_IMAGE.path),
         license: 'https://www.gnu.org/licenses/agpl-3.0.html',
         // only the free tier has a price; paid plans are left out until pricing is set
-        offers: { '@type': 'Offer', name: 'Free', description: 'Free to start', price: '0', priceCurrency: 'USD', url: home },
+        offers: { '@type': 'Offer', name: 'Free', description: 'The editor, sounds and export', price: '0', priceCurrency: 'USD', url: home },
         publisher: { '@id': org['@id'] },
       },
     ],

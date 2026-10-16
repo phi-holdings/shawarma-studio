@@ -39,13 +39,14 @@ export async function failure(res: Response): Promise<Error> {
 
 /** Plan and allowance (mirrors server/src/billing/routes.ts BillingStatus). */
 export interface MeBilling {
-  plan: 'free' | 'pro'; status: string; ok: boolean; usedPercent: number; resetsAt: string; canUpgrade: boolean;
-  message?: string; cancelAtPeriodEnd: boolean; periodEnd: string | null;
+  plan: 'free' | 'pro'; status: string; ok: boolean; usedPercent: number; resetsAt: string;
+  trial: boolean; trialEndsAt: string | null; trialDays: number; canUpgrade: boolean;
+  code?: 'pro_required' | 'allowance'; message?: string; cancelAtPeriodEnd: boolean; periodEnd: string | null;
 }
 /** GET /api/me: who is signed in; hosted mode adds the plan and allowance. */
 export type Me =
   | { mode: 'local'; user: { id: string; email: string; name: string | null; avatarUrl: string | null } }
-  | { mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean } };
+  | { mode: 'hosted'; user: { id: string; email: string; name: string | null; avatarUrl: string | null }; plan: 'free' | 'pro'; billing: MeBilling; limits: { maxProjects: number; thinkDeeper: boolean; storageBytes: number } };
 
 /** The signed-in person, or null when nobody is (hosted mode, signed out). Throws OfflineError when the server is down. */
 export async function getMe(): Promise<Me | null> {

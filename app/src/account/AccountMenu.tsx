@@ -1,10 +1,10 @@
 // The account at the bottom of the sidebar (hosted mode): who is signed in and their plan; opens a panel
-// with this month's allowance, Upgrade (Free), Manage billing and Sign out, and links to the source
+// with this month's allowance, the free trial (Free), Manage billing and Sign out, and links to the source
 // code (AGPL: everyone using the service must be offered it), privacy and terms.
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../api';
 import { AllowanceMeter } from './AllowanceMeter';
-import type { BillingStatus } from './billingApi';
+import { trialAction, type BillingStatus } from './billingApi';
 import './account.css';
 
 type HostedMe = Extract<Me, { mode: 'hosted' }>;
@@ -60,7 +60,7 @@ export function AccountMenu(props: {
           {props.billing && <AllowanceMeter status={props.billing} />}
           {error && <div role="alert" className="err-text">{error}</div>}
           <div className="account-actions">
-            {plan === 'free' && <button type="button" className="btn btn-primary" onClick={() => { setOpen(false); props.onUpgrade(); }}>Upgrade to Pro</button>}
+            {plan === 'free' && <button type="button" className="btn btn-primary" onClick={() => { setOpen(false); props.onUpgrade(); }}>{trialAction(props.billing?.trialDays ?? props.me.billing.trialDays)}</button>}
             {(plan === 'pro' || (props.billing && props.billing.status !== 'none')) && (
               <button type="button" className="btn btn-outline" disabled={busy !== null} onClick={() => void run('billing', props.onManageBilling)}>
                 {busy === 'billing' ? 'Opening billing…' : 'Manage billing'}
@@ -81,7 +81,7 @@ export function AccountMenu(props: {
         onClick={() => { const next = !open; setOpen(next); if (next) props.onOpen?.(); }}>
         <Avatar user={props.me.user} />
         <span className="account-name">{props.me.user.name ?? props.me.user.email}</span>
-        <span className={`plan-badge${plan === 'pro' ? ' pro' : ''}`}>{plan === 'pro' ? 'Pro' : 'Free'}</span>
+        <span className={`plan-badge${plan === 'pro' ? ' pro' : ''}`}>{plan === 'pro' ? (props.billing?.trial ? 'Pro trial' : 'Pro') : 'Free'}</span>
       </button>
     </div>
   );

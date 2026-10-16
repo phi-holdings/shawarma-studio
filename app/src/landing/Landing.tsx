@@ -54,7 +54,7 @@ export function Landing({ signInHref, error, links = defaultLinks }: LandingProp
                 <GoogleMark />
                 Continue with Google
               </a>
-              <span className="ld-free">Free to start</span>
+              <span className="ld-free">The editor is free. The AI comes with Pro: 7 days free, then $12 a month or $120 a year.</span>
             </div>
           </div>
         </section>

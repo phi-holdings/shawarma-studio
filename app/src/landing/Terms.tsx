@@ -10,8 +10,10 @@ export function Terms({ links }: DocPageProps) {
       <p>You are responsible for having the rights to any audio you upload. The sound libraries built into Strudel come with their own licences.</p>
 
       <h2>Plans</h2>
-      <p>The free plan includes a small monthly allowance of replies from Shawarma and a limit on how many projects you keep. A paid plan includes more of both. When your allowance runs out, the editor, playback and export keep working; Shawarma waits until the allowance resets or you upgrade. On busy days Shawarma may also pause for everyone until the next day.</p>
-      <p>Paid plans are sold through Polar, renew monthly or yearly, and can be cancelled at any time from Manage billing in the app. Cancelling stops the next renewal; you keep the paid plan until the end of the period you paid for.</p>
+      <p>The free plan includes the editor, sounds and export, with a limit on how many projects and how much storage you keep. It does not include replies from Shawarma. If you had more projects or files than the free plan keeps, they stay; you just can't add more until you are under the limit.</p>
+      <p>Pro includes a monthly allowance of replies from Shawarma, more projects and more storage. When your allowance runs out, the editor, playback and export keep working; Shawarma waits until the allowance resets. On busy days Shawarma may also pause for everyone until the next day.</p>
+      <p>Pro starts with a 7-day free trial, once per person. You add a card at checkout; it is charged when the trial ends unless you cancel before then. The trial includes a smaller allowance of replies, which may pause for the day when many trials are running.</p>
+      <p>Pro is sold through Polar, renews monthly or yearly, and can be cancelled at any time from Manage billing in the app. Cancelling stops the next renewal; you keep Pro until the end of the period you paid for.</p>
 
       <h2>Fair use</h2>
       <ul>

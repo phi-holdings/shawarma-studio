@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { waitForPro, type WaitOptions } from './billingApi';
 import './account.css';
 
-type Phase = 'waiting' | 'pro' | 'timeout';
+type Phase = 'waiting' | 'pro' | 'trial' | 'timeout';
 
 /**
  * The page Polar sends people back to (/billing/success?checkout_id=...). Payment is confirmed by
- * Polar's webhook, so this polls the plan for about 30 seconds until it shows Pro.
+ * Polar's webhook, so this polls the plan for about 30 seconds until it shows Pro (or Pro's trial).
  */
 export function BillingSuccess(props: { onContinue(): void; wait?: WaitOptions }) {
   const [phase, setPhase] = useState<Phase>('waiting');
@@ -25,6 +25,11 @@ export function BillingSuccess(props: { onContinue(): void; wait?: WaitOptions }
         {phase === 'waiting' && <>
           <h1>Confirming your payment…</h1>
           <p>This usually takes a few seconds.</p>
+        </>}
+        {phase === 'trial' && <>
+          <h1>Your free trial has started.</h1>
+          <p>Shawarma's AI is ready. You won't be charged until the trial ends, and you can cancel before then from Manage billing.</p>
+          <button type="button" className="btn btn-primary" onClick={props.onContinue}>Back to your songs</button>
         </>}
         {phase === 'pro' && <>
           <h1>You're on Pro.</h1>
