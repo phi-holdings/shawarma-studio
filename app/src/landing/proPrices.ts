@@ -1,7 +1,6 @@
-// Pro's prices as the public pages show them. The server owns them (server/src/billing/plans.ts PRICES,
-// env PRO_PRICE_MONTHLY_USD / PRO_PRICE_YEARLY_USD) and serves them at GET /api/pricing; these are its
-// defaults, used to prerender /pricing and the landing page (a server test keeps them equal), and the
-// page replaces them with the server's numbers when they differ.
+// Pro's prices as the public pages show them. The server owns them (server/src/billing/plans.ts PRICES)
+// and serves them at GET /api/pricing; these are the same numbers, used to prerender /pricing, the
+// landing page, the Terms and the structured data (a server test keeps them equal).
 export interface ProPrices { month: number; year: number }
 
 export const DEFAULT_PRICES: ProPrices = { month: 12, year: 120 };

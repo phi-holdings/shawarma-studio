@@ -44,7 +44,7 @@ export function Privacy({ links }: DocPageProps) {
         <li><strong>Google</strong> confirms who you are when you sign in.</li>
         <li><strong>Anthropic</strong> (USA) runs the AI model. When you ask the assistant something, your message, your song’s code and the recent chat are sent to Anthropic’s API to write the reply. Under Anthropic’s commercial terms that data is not used to train their models.</li>
         <li><strong>Polar</strong> is the merchant of record for Pro: it takes your card and billing details, charges you and handles tax. We only learn your plan, its status and when it renews.</li>
-        <li><strong>{EMAIL_PROVIDER}</strong> delivers the emails we send you about your account and billing (welcome, your trial and allowance, a failed payment); it gets your email address and the message.</li>
+        <li><strong>{EMAIL_PROVIDER}</strong> delivers the emails we send you about your account and billing (welcome, your trial and allowance, a failed payment, a cancellation); it gets your email address and the message.</li>
         <li><strong>Sentry</strong> (error tracking), when we have it switched on, receives a technical report when something breaks: what failed, the page (without its query string), your browser, and your account as a one-way hash. Reports carry no request contents, cookies, song code or chat, and email addresses are removed from them.</li>
         {umamiHost && <li><strong>Umami</strong> counts page views for us ({umamiHost}): the page (without its query string), the referring site, your browser, device type and country. It sets no cookies, does not follow you across sites, and does not count you if your browser sends Do Not Track.</li>}
       </ul>

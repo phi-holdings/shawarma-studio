@@ -2,9 +2,8 @@ import { LEGAL_VERSIONS } from '@shawarma/shared';
 import { DocPage, Mail, type DocPageProps, legalDate } from './DocPage';
 import { DEFAULT_PRICES, TRIAL_DAYS, usd } from './proPrices';
 
-// CONFIRM WITH OWNER before launch: the operator ("phi holdings", owner Ali AlAbdulbaqi) and the governing
-// law (Kingdom of Saudi Arabia, courts of Dammam) below are the owner's stated intent, not a lawyer's
-// review. Bump LEGAL_VERSIONS.terms (@shawarma/shared) whenever this page changes in a way that matters.
+// The operator ("phi holdings", owner Ali AlAbdulbaqi) and the governing law (Kingdom of Saudi Arabia,
+// courts of Dammam) were confirmed by the owner on 2026-10-17; they are not a lawyer's review. Bump LEGAL_VERSIONS.terms (@shawarma/shared) whenever this page changes in a way that matters.
 export const OPERATOR = 'phi holdings';
 export const OPERATOR_OWNER = 'Ali AlAbdulbaqi';
 
