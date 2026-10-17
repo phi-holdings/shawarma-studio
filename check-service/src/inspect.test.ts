@@ -79,7 +79,9 @@ describe('truncation is never silent', () => {
     expect(r.truncated).toBe(true);
     expect(r.checkedCycles).toBeGreaterThan(2);
     expect(r.checkedCycles).toBeLessThan(62);
-    expect(r.issues.find((i) => i.kind === 'truncated')!.message).toMatch(/events limit/);
+    // the event limit normally stops it; on a slow or busy machine (the CI runner) the time limit can come
+    // first, and either way the partly checked section must not be flagged
+    expect(r.issues.find((i) => i.kind === 'truncated')!.message).toMatch(/\((events|time) limit\)/);
     expect(r.issues.filter((i) => i.kind === 'empty_section')).toEqual([]);
     // a silent first section without "silence" in its label is fully checked and still reported
     const r2 = await inspect('setcpm(30)\narrange([2, s("~")], [60, s("bd*4096")], [4, s("sd")])');
